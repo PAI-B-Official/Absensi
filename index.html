@@ -397,7 +397,7 @@
             const absentList = names.filter(name => attendanceData[name] !== 'Hadir');
 
             // 1. DAFTAR HADIR
-            let message = `*Daftar Kehadiran Nama Mahasiswa PAI 1B*\n`;
+            let message = `*Daftar Kehadiran Mahasiswa PAI 1B*\n`;
             message += `*Tanggal : ${dateString}*\n`; 
             
             if (presentList.length > 0) {
@@ -409,7 +409,7 @@
             }
 
             // 2. DAFTAR TIDAK HADIR
-            message += `\n*Daftar Tidak Hadir Nama Mahasiswa PAI 1B*\n`;
+            message += `\n*Daftar Tidak Hadir Mahasiswa PAI 1B*\n`;
             
             if (absentList.length === 0) {
                 message += `• NIHIL\n`;
@@ -430,7 +430,7 @@
                 message += `• Tidak ada.`;
             } else {
                 activityLogs.forEach(log => {
-                    message += `• ${log.name} = ${log.type} "${log.note}"\n`;
+                    message += `• ${log.name} : ${log.type} "${log.note}"\n`;
                 });
             }
 
@@ -454,4 +454,5 @@
     </script>
 </body>
 </html>
+
 
