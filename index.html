@@ -99,6 +99,19 @@
             object-fit: contain; 
             display: block;
         }
+
+        /* Modal Animation */
+        #confirmModal {
+            transition: opacity 0.3s ease;
+        }
+        #confirmModal.hidden {
+            pointer-events: none;
+            opacity: 0;
+        }
+        #confirmModal:not(.hidden) {
+            opacity: 1;
+            pointer-events: auto;
+        }
     </style>
 </head>
 <!-- Body diset fixed inset-0 agar tidak bisa discroll sama sekali -->
@@ -175,8 +188,16 @@
                 </div>
             </div>
 
+            <!-- Tombol Hadir Semua (New) -->
+            <button onclick="markAllPresent()" class="w-full bg-blue-600/80 hover:bg-blue-500 text-white font-bold py-2 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 border border-blue-400/50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Hadir Semua</span>
+            </button>
+
             <!-- Tombol Kirim WA -->
-            <button onclick="sendToWhatsapp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 group border border-emerald-400">
+            <button onclick="prepareWhatsapp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 group border border-emerald-400">
                 <span>Kirim ke WhatsApp</span>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 group-hover:translate-x-1 transition-transform">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12Zm0 0h7.5" />
@@ -185,6 +206,27 @@
         </div>
 
     </main>
+
+    <!-- Modal Konfirmasi -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="glass-box bg-gray-900/90 rounded-2xl p-6 max-w-sm w-full text-center border border-emerald-500/30 shadow-2xl transform transition-all scale-100">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 mb-4">
+                <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">Konfirmasi Pengiriman</h3>
+            <p class="text-sm text-gray-300 mb-6">Apakah data yang Anda masukkan sudah sesuai? Anda akan diarahkan ke WhatsApp.</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm font-medium transition">
+                    Batal
+                </button>
+                <button onclick="proceedToWhatsapp()" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold shadow-lg transition transform active:scale-95">
+                    Ya, Kirim
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Toast -->
     <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur border border-emerald-500 text-white px-4 py-2 rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-50 text-xs">
@@ -207,6 +249,7 @@
         let activityLogs = [];   
         let selectedNames = new Set();
         let currentActivityType = null;
+        let pendingWhatsappMessage = "";
 
         // --- INITIALIZATION ---
         const nameContainer = document.getElementById('nameContainer');
@@ -295,6 +338,16 @@
             refreshAllList();
             renderActivityPreview();
             showToast("Semua data dikembalikan ke awal");
+        }
+
+        // Feature: Hadir Semua
+        function markAllPresent() {
+            names.forEach(name => {
+                selectedNames.add(name);
+                attendanceData[name] = 'Hadir';
+            });
+            refreshAllList();
+            showToast("Semua terpilih & Hadir");
         }
 
         // 1. Logic Absensi
@@ -391,8 +444,19 @@
             renderActivityPreview();
         }
 
-        // --- OUTPUT GENERATOR (WHATSAPP) ---
-        function sendToWhatsapp() {
+        // --- OUTPUT GENERATOR & NAVIGATION LOGIC ---
+
+        // Listener untuk tombol Back di Browser/HP
+        window.addEventListener('popstate', function(event) {
+            const modal = document.getElementById('confirmModal');
+            // Jika modal sedang terbuka, sembunyikan modal (tutup)
+            if (!modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+            }
+            // Jika modal sudah tertutup, browser akan melanjutkan fungsi back standar (keluar web)
+        });
+
+        function prepareWhatsapp() {
             const presentList = names.filter(name => attendanceData[name] === 'Hadir');
             const absentList = names.filter(name => attendanceData[name] !== 'Hadir');
 
@@ -433,10 +497,34 @@
                     message += `• ${log.name} : ${log.type} "${log.note}"\n`;
                 });
             }
+            
+            // Simpan pesan
+            pendingWhatsappMessage = message;
+            
+            // Buka Modal
+            document.getElementById('confirmModal').classList.remove('hidden');
+            
+            // Tambahkan state ke history browser
+            // Ini membuat tombol Back akan menutup modal ini terlebih dahulu sebelum menutup web
+            history.pushState({ modalOpen: true }, "", "#confirm");
+        }
 
-            console.log(message);
-            const encodedMessage = encodeURIComponent(message);
+        function closeConfirmModal() {
+            // Ketika klik batal, kita panggil history.back()
+            // Ini akan memicu event 'popstate' yang secara otomatis menyembunyikan modal
+            // dan menghapus state '#confirm' dari history
+            history.back();
+        }
+
+        function proceedToWhatsapp() {
+            const encodedMessage = encodeURIComponent(pendingWhatsappMessage);
             window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+            
+            // Setelah kirim WA, reset data agar bersih
+            resetAllData();
+            
+            // Tutup modal dengan history back (membersihkan history modal juga)
+            history.back();
         }
 
         function showToast(msg) {
