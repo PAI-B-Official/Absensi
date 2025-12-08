@@ -89,15 +89,13 @@
             background: rgba(0, 0, 0, 0.4);
         }
 
-        /* Static Logo */
+        /* Static Logo (Diperbarui: Tanpa Lingkaran) */
         .static-logo {
-            width: 70px;
-            height: 70px;
+            width: 80px;         /* Lebar sedikit diperbesar agar proporsional */
+            height: 80px;        /* Tinggi disamakan */
             margin: 0 auto 0.5rem auto;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.1); 
+            object-fit: contain; /* Agar gambar utuh (tidak terpotong) */
+            display: block;
         }
     </style>
 </head>
