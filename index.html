@@ -11,24 +11,16 @@
             font-family: 'Poppins', sans-serif;
             background-color: #064e3b; /* Dark Green Base */
             color: white;
-            /* Mencegah scroll pada body halaman utama */
             overflow: hidden; 
-            touch-action: none; /* Mencegah bounce effect di iOS */
+            touch-action: none;
         }
 
-        /* Custom Scrollbar untuk Daftar Nama Saja */
-        #nameContainer::-webkit-scrollbar {
-            width: 4px; /* Lebih tipis agar rapi di HP */
-        }
-        #nameContainer::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        #nameContainer::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-        }
+        /* Custom Scrollbar */
+        #nameContainer::-webkit-scrollbar { width: 4px; }
+        #nameContainer::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        #nameContainer::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 4px; }
 
-        /* Glass Effect - Optimized */
+        /* Glass Effect */
         .glass-box {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(8px); 
@@ -45,12 +37,10 @@
             transform: translateZ(0);
         }
 
-        .glass-item:active {
-            transform: scale(0.98);
-        }
+        .glass-item:active { transform: scale(0.98); }
 
         .glass-item.selected {
-            background: rgba(16, 185, 129, 0.4); /* Emerald selected */
+            background: rgba(16, 185, 129, 0.4);
             border-color: #34d399;
             font-weight: 600;
         }
@@ -61,7 +51,7 @@
         .status-sakit { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.1); } 
         .status-alpha { border-left: 4px solid #9ca3af; background: rgba(156, 163, 175, 0.1); } 
 
-        /* Animation Optimized */
+        /* Animation */
         .blob {
             position: absolute;
             border-radius: 50%;
@@ -93,36 +83,29 @@
         }
 
         .static-logo {
-            width: 70px;         
-            height: 70px;        
-            margin: 0 auto 0.5rem auto;
-            object-fit: contain; 
-            display: block;
+            width: 70px; height: 70px; margin: 0 auto 0.5rem auto;
+            object-fit: contain; display: block;
         }
 
         /* Modal Animation */
-        #confirmModal {
-            transition: opacity 0.3s ease;
+        #confirmModal, #warningModal { transition: opacity 0.3s ease; }
+        #confirmModal.hidden, #warningModal.hidden { pointer-events: none; opacity: 0; }
+        #confirmModal:not(.hidden), #warningModal:not(.hidden) { opacity: 1; pointer-events: auto; }
+
+        /* Animation for Warning Popout */
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
-        #confirmModal.hidden {
-            pointer-events: none;
-            opacity: 0;
-        }
-        #confirmModal:not(.hidden) {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .pop-in-content { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 </head>
-<!-- Body diset fixed inset-0 agar tidak bisa discroll sama sekali -->
 <body class="fixed inset-0 w-full h-[100dvh] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
 
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
 
-    <!-- Main Container diset h-full agar mengisi ruang yang tersedia tanpa overflow -->
     <main class="w-full max-w-lg glass-box rounded-2xl p-4 sm:p-5 relative z-10 flex flex-col gap-3 h-full">
-        
         <!-- Header -->
         <header class="text-center border-b border-white/20 pb-2 shrink-0">
             <img src="IAINU.jpg" alt="Logo" class="static-logo" onerror="this.style.display='none'">
@@ -130,7 +113,7 @@
             <p class="text-[10px] sm:text-xs text-emerald-100/70" id="currentDateDisplay"></p>
         </header>
 
-        <!-- Daftar Nama (Hanya bagian ini yang bisa discroll) -->
+        <!-- Daftar Nama -->
         <section class="flex-1 flex flex-col min-h-0">
             <div class="flex items-center justify-between mb-2 shrink-0">
                 <h2 class="text-xs font-semibold uppercase tracking-widest text-emerald-200">
@@ -140,16 +123,11 @@
                     Refresh
                 </button>
             </div>
-            
-            <!-- overflow-y-auto tetap ada di sini -->
-            <div class="overflow-y-auto pr-1 flex-1 space-y-1 touch-pan-y" id="nameContainer">
-                <!-- Names rendered via JS -->
-            </div>
+            <div class="overflow-y-auto pr-1 flex-1 space-y-1 touch-pan-y" id="nameContainer"></div>
         </section>
 
-        <!-- Panel Kontrol (Bawah) -->
+        <!-- Panel Kontrol -->
         <div class="flex flex-col gap-2 sm:gap-3 shrink-0">
-            
             <!-- 1. Input Absensi -->
             <div class="glass-box p-3 rounded-xl bg-black/10">
                 <p class="text-[10px] text-emerald-200 uppercase mb-2 font-bold flex justify-between">
@@ -166,65 +144,64 @@
             <!-- 2. Input Aktivitas -->
             <div class="glass-box p-3 rounded-xl bg-black/10">
                 <p class="text-[10px] text-blue-200 uppercase mb-2 font-bold">Mengajukan Tentang :</p>
-                
                 <div class="grid grid-cols-3 gap-2 mb-2">
                     <button onclick="setActivityType(this, 'Bertanya')" class="act-btn glass-item rounded py-1.5 text-xs text-center hover:bg-blue-500/30 active:scale-95">Bertanya</button>
                     <button onclick="setActivityType(this, 'Menjawab')" class="act-btn glass-item rounded py-1.5 text-xs text-center hover:bg-blue-500/30 active:scale-95">Menjawab</button>
                     <button onclick="setActivityType(this, 'Menyanggah')" class="act-btn glass-item rounded py-1.5 text-xs text-center hover:bg-blue-500/30 active:scale-95">Menyanggah</button>
                 </div>
-
                 <div class="flex gap-2">
                     <textarea id="activityNote" rows="1" class="custom-input flex-1 rounded-lg p-2 text-xs resize-none" placeholder="Ketik isi aktivitas..."></textarea>
-                    
                     <button onclick="addActivityLog()" class="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 flex items-center justify-center shadow-lg transition active:scale-95 border border-blue-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     </button>
                 </div>
-
-                <div id="activityPreview" class="mt-2 max-h-16 overflow-y-auto space-y-1 hidden">
-                    <!-- Added activities appear here -->
-                </div>
+                <div id="activityPreview" class="mt-2 max-h-16 overflow-y-auto space-y-1 hidden"></div>
             </div>
 
-            <!-- Tombol Hadir Semua (New) -->
             <button onclick="markAllPresent()" class="w-full bg-blue-600/80 hover:bg-blue-500 text-white font-bold py-2 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 border border-blue-400/50">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <span>Hadir Semua</span>
             </button>
 
-            <!-- Tombol Kirim WA -->
             <button onclick="prepareWhatsapp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 group border border-emerald-400">
                 <span>Kirim ke WhatsApp</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 group-hover:translate-x-1 transition-transform">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12Zm0 0h7.5" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 group-hover:translate-x-1 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12Zm0 0h7.5" /></svg>
             </button>
         </div>
-
     </main>
 
-    <!-- Modal Konfirmasi -->
+    <!-- Modal Konfirmasi WA -->
     <div id="confirmModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="glass-box bg-gray-900/90 rounded-2xl p-6 max-w-sm w-full text-center border border-emerald-500/30 shadow-2xl transform transition-all scale-100">
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 mb-4">
-                <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
+                <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
             </div>
             <h3 class="text-lg font-bold text-white mb-2">Beneran Yakin?</h3>
             <p class="text-sm text-gray-300 mb-6">Serius nih udah sesuai, Gak mau di check lagi? Yaudah kalo kamu yakin lanjut WA yuk :)</p>
             <div class="flex gap-3 justify-center">
-                <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm font-medium transition">
-                    Batal
-                </button>
-                <button onclick="proceedToWhatsapp()" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold shadow-lg transition transform active:scale-95">
-                    Kirim
-                </button>
+                <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm font-medium transition">Batal</button>
+                <button onclick="proceedToWhatsapp()" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold shadow-lg transition transform active:scale-95">Kirim</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Peringatan (Belum Isi) - Video -->
+    <div id="warningModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center hidden p-4">
+        <div class="pop-in-content flex flex-col items-center justify-center w-full max-w-sm text-center">
+            
+            <!-- Video Container 1:1 -->
+            <div class="w-64 h-64 relative mb-4 rounded-xl overflow-hidden border-2 border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                <!-- VIDEO SOURCE -->
+                <!-- Ganti src="" dengan file video Anda. Contoh: src="video_kucing.mp4" -->
+                <!-- mix-blend-screen membuat background hitam video jadi transparan -->
+                <video id="warningVideo" class="w-full h-full object-cover mix-blend-screen bg-black" playsinline muted>
+                    <source src="Huggface.WEBM" type="video/mp4">
+                    <!-- Backup text jika video gagal load -->
+                    <div class="w-full h-full flex items-center justify-center bg-black text-white">Video Here</div>
+                </video>
+            </div>
+
+            <p class="text-xl font-bold text-white tracking-wider animate-pulse">Lengkapi Dulu Yaa :)</p>
         </div>
     </div>
 
@@ -234,7 +211,6 @@
     </div>
 
     <script>
-        // --- DATA ---
         const names = [
             "Ady Surya", "Ahmad Lubadul Fikri", "Alyvia Qurrotal ’Aini", "Anggun Lolyka Hastuti",
             "Aqillah Mazaya", "Arina Manasika", "Devi Kurniasari", "Elok Iis Nurrohmah",
@@ -244,32 +220,25 @@
             "Yoana Dian Riski Astuti", "Youvischa Aulia Arsynta", "Yuyun Lutfiyatul Kh", "Zain Nur Fadilah"
         ];
 
-        // State Store
         let attendanceData = {}; 
         let activityLogs = [];   
         let selectedNames = new Set();
         let currentActivityType = null;
         let pendingWhatsappMessage = "";
 
-        // --- INITIALIZATION ---
         const nameContainer = document.getElementById('nameContainer');
         const dateDisplay = document.getElementById('currentDateDisplay');
 
-        // Set Date
         const today = new Date();
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         const dateString = today.toLocaleDateString('id-ID', options);
         dateDisplay.innerText = dateString;
 
-        // Init Default
         function initAttendance() {
-            names.forEach(name => {
-                attendanceData[name] = 'Hadir';
-            });
+            names.forEach(name => { attendanceData[name] = 'Hadir'; });
         }
         initAttendance();
 
-        // --- RENDERING OPTIMIZED ---
         function initList() {
             nameContainer.innerHTML = '';
             names.forEach((name, index) => {
@@ -277,7 +246,6 @@
                 div.id = `person-${index}`;
                 div.className = `glass-item p-2 rounded flex items-center justify-between text-xs select-none status-hadir`;
                 div.onclick = () => toggleSelection(name, index);
-                
                 div.innerHTML = `
                     <div class="flex items-center gap-2">
                         <span class="opacity-50 w-5">${index + 1}.</span>
@@ -294,14 +262,12 @@
             const name = names[index];
             const div = document.getElementById(`person-${index}`);
             if (!div) return;
-
             const status = attendanceData[name];
             const isSelected = selectedNames.has(name);
             const statusTextSpan = div.querySelector('.status-text');
             const indicator = div.querySelector('.indicator');
 
             div.className = `glass-item p-2 rounded flex items-center justify-between text-xs select-none ${isSelected ? 'selected' : ''}`;
-            
             if (status === 'Hadir') div.classList.add('status-hadir');
             else if (status === 'Izin') div.classList.add('status-izin');
             else if (status === 'Sakit') div.classList.add('status-sakit');
@@ -312,21 +278,14 @@
             else if (status === 'Sakit') text = '(Sakit)';
             else if (status === 'Alpha') text = '(Alpha)';
             statusTextSpan.innerText = text;
-
             indicator.className = `indicator w-2 h-2 rounded-full ${isSelected ? 'bg-emerald-400 shadow-[0_0_5px_#34d399]' : 'bg-white/10'}`;
         }
 
-        function refreshAllList() {
-            names.forEach((_, index) => updateListItem(index));
-        }
+        function refreshAllList() { names.forEach((_, index) => updateListItem(index)); }
 
-        // --- INTERACTIONS ---
         function toggleSelection(name, index) {
-            if (selectedNames.has(name)) {
-                selectedNames.delete(name);
-            } else {
-                selectedNames.add(name);
-            }
+            if (selectedNames.has(name)) selectedNames.delete(name);
+            else selectedNames.add(name);
             updateListItem(index); 
         }
 
@@ -340,7 +299,6 @@
             showToast("Semua data dikembalikan ke awal");
         }
 
-        // Feature: Hadir Semua
         function markAllPresent() {
             names.forEach(name => {
                 selectedNames.add(name);
@@ -350,26 +308,19 @@
             showToast("Semua terpilih & Hadir");
         }
 
-        // 1. Logic Absensi
         function setStatusForSelected(status) {
-            if (selectedNames.size === 0) {
-                showToast("⚠️ Pilih nama dulu sayang!");
-                return;
-            }
-            
+            if (selectedNames.size === 0) { showToast("⚠️ Pilih nama dulu sayang!"); return; }
             const indicesToUpdate = [];
             selectedNames.forEach(name => {
                 attendanceData[name] = status;
                 const idx = names.indexOf(name);
                 if(idx !== -1) indicesToUpdate.push(idx);
             });
-            
             selectedNames.clear();
             indicesToUpdate.forEach(idx => updateListItem(idx));
             showToast(`✅ Status: ${status}`);
         }
 
-        // 2. Logic Aktivitas
         function setActivityType(btn, type) {
             document.querySelectorAll('.act-btn').forEach(b => {
                 b.classList.remove('bg-blue-500', 'text-white', 'font-bold');
@@ -382,31 +333,16 @@
 
         function addActivityLog() {
             const note = document.getElementById('activityNote').value;
-
-            if (selectedNames.size === 0) {
-                showToast("⚠️ Pilih nama mahasiswa dulu!");
-                return;
-            }
-            if (!currentActivityType) {
-                showToast("⚠️ Pilih jenis aktivitas!");
-                return;
-            }
-            if (!note.trim()) {
-                showToast("⚠️ Isi catatan aktivitas!");
-                return;
-            }
+            if (selectedNames.size === 0) { showToast("⚠️ Pilih nama mahasiswa dulu!"); return; }
+            if (!currentActivityType) { showToast("⚠️ Pilih jenis aktivitas!"); return; }
+            if (!note.trim()) { showToast("⚠️ Isi catatan aktivitas!"); return; }
 
             const indicesToUpdate = [];
             selectedNames.forEach(name => {
-                activityLogs.push({
-                    name: name,
-                    type: currentActivityType,
-                    note: note
-                });
+                activityLogs.push({ name: name, type: currentActivityType, note: note });
                 const idx = names.indexOf(name);
                 if(idx !== -1) indicesToUpdate.push(idx);
             });
-
             document.getElementById('activityNote').value = '';
             selectedNames.clear();
             indicesToUpdate.forEach(idx => updateListItem(idx));
@@ -417,7 +353,6 @@
         function renderActivityPreview() {
             const container = document.getElementById('activityPreview');
             container.innerHTML = '';
-            
             if (activityLogs.length > 0) {
                 container.classList.remove('hidden');
                 activityLogs.forEach((log, idx) => {
@@ -434,9 +369,7 @@
                     `;
                     container.appendChild(div);
                 });
-            } else {
-                container.classList.add('hidden');
-            }
+            } else { container.classList.add('hidden'); }
         }
 
         function removeLog(index) {
@@ -444,23 +377,43 @@
             renderActivityPreview();
         }
 
-        // --- OUTPUT GENERATOR & NAVIGATION LOGIC ---
-
-        // Listener untuk tombol Back di Browser/HP
         window.addEventListener('popstate', function(event) {
             const modal = document.getElementById('confirmModal');
-            // Jika modal sedang terbuka, sembunyikan modal (tutup)
-            if (!modal.classList.contains('hidden')) {
-                modal.classList.add('hidden');
-            }
-            // Jika modal sudah tertutup, browser akan melanjutkan fungsi back standar (keluar web)
+            if (!modal.classList.contains('hidden')) { modal.classList.add('hidden'); }
         });
 
+        // --- NEW LOGIC FOR VALIDATION ---
         function prepareWhatsapp() {
+            // Check if user has done NOTHING (All default 'Hadir' AND No Activities)
+            const isAllHadir = names.every(name => attendanceData[name] === 'Hadir');
+            const noActivities = activityLogs.length === 0;
+
+            if (isAllHadir && noActivities) {
+                // Trigger Warning Video Logic
+                const warningModal = document.getElementById('warningModal');
+                const warningVideo = document.getElementById('warningVideo');
+                
+                warningModal.classList.remove('hidden');
+                
+                // Play video if supported/ready
+                if (warningVideo) {
+                    warningVideo.currentTime = 0;
+                    warningVideo.play().catch(e => console.log("Auto-play prevented"));
+                }
+
+                // Close after 5500 ms (5.5 seconds)
+                setTimeout(() => {
+                    warningModal.classList.add('hidden');
+                    if (warningVideo) warningVideo.pause();
+                }, 5500);
+
+                return; // Stop here, don't open WA modal
+            }
+
+            // Normal Flow if data exists
             const presentList = names.filter(name => attendanceData[name] === 'Hadir');
             const absentList = names.filter(name => attendanceData[name] !== 'Hadir');
 
-            // 1. DAFTAR HADIR
             let message = `*Daftar Kehadiran Mahasiswa PAI 1B*\n`;
             message += `*Tanggal : ${dateString}*\n`; 
             
@@ -468,16 +421,11 @@
                 presentList.forEach((name, index) => {
                     message += `${index + 1}. ${name.toUpperCase()}\n`;
                 });
-            } else {
-                message += `(Tidak ada yang hadir)\n`;
-            }
+            } else { message += `(Tidak ada yang hadir)\n`; }
 
-            // 2. DAFTAR TIDAK HADIR
             message += `\n*Daftar Tidak Hadir Mahasiswa PAI 1B*\n`;
-            
-            if (absentList.length === 0) {
-                message += `• NIHIL\n`;
-            } else {
+            if (absentList.length === 0) { message += `• NIHIL\n`; } 
+            else {
                 absentList.forEach(name => {
                     const status = attendanceData[name];
                     let textStatus = status;
@@ -486,43 +434,25 @@
                 });
             }
 
-            // 3. DAFTAR KEAKTIFAN
             message += `\n*Daftar Nama Mahasiswa Aktif Kegiatan Perkuliahan (Bertanya, Menjawab, & Menyanggah)*\n`;
-            
-            if (activityLogs.length === 0) {
-                message += `• Tidak ada.`;
-            } else {
+            if (activityLogs.length === 0) { message += `• Tidak ada.`; } 
+            else {
                 activityLogs.forEach(log => {
                     message += `• ${log.name} : ${log.type} "${log.note}"\n`;
                 });
             }
             
-            // Simpan pesan
             pendingWhatsappMessage = message;
-            
-            // Buka Modal
             document.getElementById('confirmModal').classList.remove('hidden');
-            
-            // Tambahkan state ke history browser
-            // Ini membuat tombol Back akan menutup modal ini terlebih dahulu sebelum menutup web
             history.pushState({ modalOpen: true }, "", "#confirm");
         }
 
-        function closeConfirmModal() {
-            // Ketika klik batal, kita panggil history.back()
-            // Ini akan memicu event 'popstate' yang secara otomatis menyembunyikan modal
-            // dan menghapus state '#confirm' dari history
-            history.back();
-        }
+        function closeConfirmModal() { history.back(); }
 
         function proceedToWhatsapp() {
             const encodedMessage = encodeURIComponent(pendingWhatsappMessage);
             window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
-            
-            // Setelah kirim WA, reset data agar bersih
             resetAllData();
-            
-            // Tutup modal dengan history back (membersihkan history modal juga)
             history.back();
         }
 
@@ -530,16 +460,11 @@
             const toast = document.getElementById('toast');
             document.getElementById('toastMessage').innerText = msg;
             toast.classList.remove('opacity-0', 'translate-y-[-20px]');
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-[-20px]');
-            }, 2500);
+            setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-[-20px]'); }, 2500);
         }
 
-        // Start
         initList(); 
         refreshAllList(); 
     </script>
 </body>
 </html>
-
-
