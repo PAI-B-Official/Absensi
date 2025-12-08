@@ -126,7 +126,7 @@
         <!-- Header -->
         <header class="text-center border-b border-white/20 pb-2 shrink-0">
             <img src="IAINU.jpg" alt="Logo" class="static-logo" onerror="this.style.display='none'">
-            <h1 class="text-lg sm:text-xl font-bold tracking-wider text-emerald-300">DATA KEHADIRAN PAI B</h1>
+            <h1 class="text-lg sm:text-xl font-bold tracking-wider text-emerald-300">PRESENSI KEHADIRAN MAHASISWA PAI B</h1>
             <p class="text-[10px] sm:text-xs text-emerald-100/70" id="currentDateDisplay"></p>
         </header>
 
@@ -134,10 +134,10 @@
         <section class="flex-1 flex flex-col min-h-0">
             <div class="flex items-center justify-between mb-2 shrink-0">
                 <h2 class="text-xs font-semibold uppercase tracking-widest text-emerald-200">
-                    Daftar Mahasiswa
+                    Nama-nama Mahasiswa
                 </h2>
                 <button onclick="resetAllData()" class="text-[10px] bg-red-500/20 hover:bg-red-500/40 text-red-100 border border-red-500/30 px-3 py-1 rounded transition active:scale-95">
-                    Reset Pilihan
+                    Refresh
                 </button>
             </div>
             
@@ -153,8 +153,8 @@
             <!-- 1. Input Absensi -->
             <div class="glass-box p-3 rounded-xl bg-black/10">
                 <p class="text-[10px] text-emerald-200 uppercase mb-2 font-bold flex justify-between">
-                    <span>1. Set Status Absensi (yg dipilih)</span>
-                    <span class="text-[9px] opacity-60 normal-case">Default: Hadir</span>
+                    <span>Detail Keterangan :</span>
+                    <span class="text-[9px] opacity-60 normal-case">Status</span>
                 </p>
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="setStatusForSelected('Alpha')" class="bg-gray-600/40 hover:bg-gray-600 border border-gray-500/50 rounded py-2 text-xs transition active:scale-95">Alpha</button>
@@ -165,7 +165,7 @@
 
             <!-- 2. Input Aktivitas -->
             <div class="glass-box p-3 rounded-xl bg-black/10">
-                <p class="text-[10px] text-blue-200 uppercase mb-2 font-bold">2. Tambah Aktivitas</p>
+                <p class="text-[10px] text-blue-200 uppercase mb-2 font-bold">Mengajukan Tentang :</p>
                 
                 <div class="grid grid-cols-3 gap-2 mb-2">
                     <button onclick="setActivityType(this, 'Bertanya')" class="act-btn glass-item rounded py-1.5 text-xs text-center hover:bg-blue-500/30 active:scale-95">Bertanya</button>
@@ -215,14 +215,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">Konfirmasi Pengiriman</h3>
-            <p class="text-sm text-gray-300 mb-6">Apakah data yang Anda masukkan sudah sesuai? Anda akan diarahkan ke WhatsApp.</p>
+            <h3 class="text-lg font-bold text-white mb-2">Beneran Yakin?</h3>
+            <p class="text-sm text-gray-300 mb-6">Serius nih udah sesuai, Gak mau di check lagi? Yaudah kalo kamu yakin lanjut WA yuk :)</p>
             <div class="flex gap-3 justify-center">
                 <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm font-medium transition">
                     Batal
                 </button>
                 <button onclick="proceedToWhatsapp()" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold shadow-lg transition transform active:scale-95">
-                    Ya, Kirim
+                    Kirim
                 </button>
             </div>
         </div>
@@ -541,3 +541,4 @@
     </script>
 </body>
 </html>
+
