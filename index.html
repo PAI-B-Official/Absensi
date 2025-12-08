@@ -2,194 +2,190 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Data Personel PAI 1B</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        /* Reset & Base */
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #064e3b; /* Dark Green Base */
+            background-color: #022c22; /* Darker Green for better contrast */
             color: white;
-            overflow-x: hidden;
+            overflow: hidden; /* Prevent body scroll */
+            height: 100dvh; /* Dynamic Height for Mobile Browsers */
+            width: 100vw;
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
+        /* Container Utama Mobile-First */
+        .app-container {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
+
+        /* Desktop Adjustment */
+        @media (min-width: 768px) {
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-image: radial-gradient(circle at 50% 50%, #065f46 0%, #022c22 100%);
+            }
+            .app-container {
+                height: 90vh;
+                max-width: 480px;
+                border-radius: 24px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            }
         }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
+
+        /* Scrollbar Halus */
+        .custom-scroll {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 4px;
         }
 
-        /* Glass Effect */
-        .glass-box {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        }
-
+        /* Glass Item List */
         .glass-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s active;
+        }
+        .glass-item:active {
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        .glass-item:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: #34d399;
-            transform: translateX(3px);
-            cursor: pointer;
+        /* Status Styles */
+        .status-indicator {
+            width: 4px;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .status-hadir .status-indicator { background-color: #10b981; box-shadow: 0 0 10px #10b981; }
+        .status-izin .status-indicator { background-color: #facc15; }
+        .status-sakit .status-indicator { background-color: #ef4444; }
+        .status-alpha .status-indicator { background-color: #9ca3af; }
+
+        .item-selected {
+            background: rgba(52, 211, 153, 0.15); /* Emerald Tint */
         }
 
-        .glass-item.selected {
-            background: rgba(16, 185, 129, 0.4); /* Emerald selected */
-            border-color: #34d399;
-            font-weight: 600;
-        }
-
-        /* Status Colors for List Items */
-        .status-hadir { border-left: 4px solid #10b981; } /* Green */
-        .status-izin { border-left: 4px solid #facc15; background: rgba(250, 204, 21, 0.1); } /* Yellow */
-        .status-sakit { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.1); } /* Red */
-        .status-alpha { border-left: 4px solid #9ca3af; background: rgba(156, 163, 175, 0.1); } /* Gray for Alpha */
-
-        /* Animation */
+        /* Animation Background */
         .blob {
             position: absolute;
             border-radius: 50%;
-            filter: blur(60px);
-            opacity: 0.6;
-            animation: float 20s infinite alternate;
+            filter: blur(80px);
+            opacity: 0.4;
             z-index: -1;
+            pointer-events: none;
         }
-        .blob-1 { top: -10%; left: -10%; width: 400px; height: 400px; background: #059669; }
-        .blob-2 { bottom: -10%; right: -10%; width: 300px; height: 300px; background: #047857; animation-delay: -5s; }
-        
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(20px, 40px) scale(1.1); }
-        }
+        .blob-1 { top: -20%; left: -20%; width: 300px; height: 300px; background: #10b981; }
+        .blob-2 { bottom: -20%; right: -20%; width: 250px; height: 250px; background: #059669; }
 
-        .custom-input {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            transition: all 0.3s;
-        }
-        .custom-input:focus {
-            outline: none;
-            border-color: #34d399;
-            background: rgba(0, 0, 0, 0.4);
-        }
-
-        /* Static Logo (Diperbarui: Tanpa Lingkaran) */
-        .static-logo {
-            width: 80px;         /* Lebar sedikit diperbesar agar proporsional */
-            height: 80px;        /* Tinggi disamakan */
-            margin: 0 auto 0.5rem auto;
-            object-fit: contain; /* Agar gambar utuh (tidak terpotong) */
-            display: block;
+        /* Utilities */
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 relative">
+<body>
 
+    <!-- Background Blobs -->
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
 
-    <main class="w-full max-w-lg glass-box rounded-2xl p-5 relative z-10 flex flex-col gap-4 h-[95vh]">
+    <main class="app-container relative overflow-hidden">
         
-        <!-- Header -->
-        <header class="text-center border-b border-white/20 pb-3 shrink-0">
-            <img src="IAINU.jpg" alt="Logo" class="static-logo" onerror="this.style.display='none'">
-            <h1 class="text-xl font-bold tracking-wider text-emerald-300">DATA KEHADIRAN PAI 1B</h1>
-            <p class="text-xs text-emerald-100/70" id="currentDateDisplay"></p>
+        <!-- HEADER: Compact & Clean -->
+        <header class="flex items-center gap-4 p-4 border-b border-white/10 shrink-0 bg-black/10 backdrop-blur-md z-20">
+            <img src="IAINU.jpg" alt="Logo" class="w-12 h-12 object-contain rounded-full bg-white/10" onerror="this.style.display='none'">
+            <div class="flex-1">
+                <h1 class="text-lg font-bold text-emerald-300 leading-tight">ABSENSI PAI 1B</h1>
+                <p class="text-[10px] text-emerald-100/60 font-mono mt-0.5" id="currentDateDisplay">Loading...</p>
+            </div>
+            <button onclick="resetAllData()" class="bg-white/5 active:bg-red-500/20 text-xs px-3 py-2 rounded-lg border border-white/10 text-red-200 transition">
+                Reset
+            </button>
         </header>
 
-        <!-- Daftar Nama -->
-        <section class="flex-1 flex flex-col min-h-0">
-            <div class="flex items-center justify-between mb-2 shrink-0">
-                <h2 class="text-xs font-semibold uppercase tracking-widest text-emerald-200">
-                    Daftar Mahasiswa
-                </h2>
-                <!-- Tombol Reset Semua -->
-                <button onclick="resetAllData()" class="text-[10px] bg-red-500/20 hover:bg-red-500/40 text-red-100 border border-red-500/30 px-3 py-1 rounded transition">
-                    Reset Pilihan
-                </button>
-            </div>
-            
-            <div class="overflow-y-auto pr-1 flex-1 space-y-1" id="nameContainer">
+        <!-- CONTENT: List Mahasiswa (Scrollable Area) -->
+        <section class="flex-1 custom-scroll relative z-10" id="listSection">
+            <div class="p-3 pb-24" id="nameContainer">
                 <!-- Names rendered via JS -->
             </div>
         </section>
 
-        <!-- Panel Kontrol (Bawah) -->
-        <div class="flex flex-col gap-3 shrink-0">
+        <!-- FOOTER: Controls (Fixed Bottom) -->
+        <div class="shrink-0 bg-[#022c22]/90 backdrop-blur-xl border-t border-white/10 p-3 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] safe-bottom">
             
-            <!-- 1. Input Absensi -->
-            <div class="glass-box p-3 rounded-xl bg-black/10">
-                <p class="text-[10px] text-emerald-200 uppercase mb-2 font-bold flex justify-between">
-                    <span>1. Set Status Absensi (untuk yg dipilih)</span>
-                    <span class="text-[9px] opacity-60 normal-case">Default: Hadir</span>
-                </p>
-                <div class="grid grid-cols-3 gap-2">
-                    <!-- Tombol Hadir diubah jadi Alpha -->
-                    <button onclick="setStatusForSelected('Alpha')" class="bg-gray-600/40 hover:bg-gray-600 border border-gray-500/50 rounded py-1.5 text-xs transition">Alpha</button>
-                    <button onclick="setStatusForSelected('Izin')" class="bg-yellow-600/40 hover:bg-yellow-600 border border-yellow-500/50 rounded py-1.5 text-xs transition">Izin</button>
-                    <button onclick="setStatusForSelected('Sakit')" class="bg-red-600/40 hover:bg-red-600 border border-red-500/50 rounded py-1.5 text-xs transition">Sakit</button>
-                </div>
-            </div>
-
-            <!-- 2. Input Aktivitas -->
-            <div class="glass-box p-3 rounded-xl bg-black/10">
-                <p class="text-[10px] text-blue-200 uppercase mb-2 font-bold">2. Tambah Aktivitas (Pertanyaan/Sanggahan)</p>
+            <!-- Tab Controls -->
+            <div class="flex flex-col gap-3">
                 
-                <!-- Pilihan Jenis Aktivitas -->
-                <div class="grid grid-cols-3 gap-2 mb-2">
-                    <button onclick="setActivityType(this, 'Bertanya')" class="act-btn glass-item rounded py-1 text-xs text-center hover:bg-blue-500/30">Bertanya</button>
-                    <button onclick="setActivityType(this, 'Menjawab')" class="act-btn glass-item rounded py-1 text-xs text-center hover:bg-blue-500/30">Menjawab</button>
-                    <button onclick="setActivityType(this, 'Menyanggah')" class="act-btn glass-item rounded py-1 text-xs text-center hover:bg-blue-500/30">Menyanggah</button>
+                <!-- Row 1: Status Buttons -->
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setStatusForSelected('Hadir')" class="hidden">Default</button> <!-- Hidden default handler -->
+                    <button onclick="setStatusForSelected('Alpha')" class="py-2.5 rounded-lg bg-gray-700/50 text-gray-200 text-xs font-medium active:scale-95 transition border border-gray-600">Alpha</button>
+                    <button onclick="setStatusForSelected('Izin')" class="py-2.5 rounded-lg bg-yellow-600/30 text-yellow-200 text-xs font-medium active:scale-95 transition border border-yellow-600/50">Izin</button>
+                    <button onclick="setStatusForSelected('Sakit')" class="py-2.5 rounded-lg bg-red-600/30 text-red-200 text-xs font-medium active:scale-95 transition border border-red-600/50">Sakit</button>
+                    <!-- Tombol Info/Reset Selection -->
+                    <button onclick="clearSelection()" class="py-2.5 rounded-lg bg-emerald-900/50 text-emerald-200 text-xs border border-emerald-700 active:scale-95">
+                        Clear
+                    </button>
                 </div>
 
-                <!-- Input Text & Tombol Plus -->
-                <div class="flex gap-2">
-                    <textarea id="activityNote" rows="1" class="custom-input flex-1 rounded-lg p-2 text-xs resize-none" placeholder="Ketik isi aktivitas..."></textarea>
+                <!-- Row 2: Activity Input (Expandable Logic) -->
+                <div class="flex gap-2 items-center bg-black/20 p-1.5 rounded-lg border border-white/5">
+                    <!-- Dropdown simple untuk Activity Type -->
+                    <select id="activityTypeSelector" class="bg-white/5 text-white text-[10px] py-2 px-1 rounded border-none outline-none w-20 text-center">
+                        <option value="Bertanya" class="bg-gray-800">Tanya</option>
+                        <option value="Menjawab" class="bg-gray-800">Jawab</option>
+                        <option value="Menyanggah" class="bg-gray-800">Sanggah</option>
+                    </select>
+
+                    <input type="text" id="activityNote" class="flex-1 bg-transparent text-xs text-white placeholder-white/30 outline-none px-2" placeholder="Catatan aktivitas...">
                     
-                    <!-- Tombol Plus (+) -->
-                    <button onclick="addActivityLog()" class="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 flex items-center justify-center shadow-lg transition active:scale-95 border border-blue-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5">
+                    <button onclick="addActivityLog()" class="bg-blue-600 text-white p-2 rounded-md shadow-lg active:bg-blue-500 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                     </button>
                 </div>
 
-                <!-- Preview Aktivitas yg sudah di-add -->
-                <div id="activityPreview" class="mt-2 max-h-20 overflow-y-auto space-y-1 hidden">
-                    <!-- Added activities appear here -->
-                </div>
+                <!-- Row 3: Send Button -->
+                <button onclick="sendToWhatsapp()" class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-semibold py-3 rounded-xl shadow-lg active:scale-[0.98] transition flex items-center justify-center gap-2">
+                    <span>Kirim Laporan WhatsApp</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                </button>
             </div>
-
-            <!-- Tombol Kirim WA -->
-            <button onclick="sendToWhatsapp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 group border border-emerald-400">
-                <span>Kirim ke WhatsApp</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 group-hover:translate-x-1 transition-transform">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12Zm0 0h7.5" />
-                </svg>
-            </button>
+            
+            <!-- Activity Preview Mini (Hidden by default, shown if data exists) -->
+            <div id="miniPreview" class="hidden mt-2 pt-2 border-t border-white/5 text-[10px] text-emerald-200/70 text-center italic">
+                0 Aktivitas tercatat
+            </div>
         </div>
 
     </main>
 
-    <!-- Toast -->
-    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur border border-emerald-500 text-white px-4 py-2 rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-50 text-xs">
-        <span id="toastMessage">Action Success</span>
+    <!-- Floating Toast -->
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-md border border-emerald-500/50 text-emerald-50 px-5 py-2.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-50 text-xs font-medium whitespace-nowrap">
+        Notification
     </div>
 
     <script>
@@ -203,243 +199,248 @@
             "Yoana Dian Riski Astuti", "Youvischa Aulia Arsynta", "Yuyun Lutfiyatul Kh", "Zain Nur Fadilah"
         ];
 
-        // State Store
-        let attendanceData = {}; // Format: "Hadir", "Izin", "Sakit", "Alpha"
+        let attendanceData = {}; 
         let activityLogs = [];   
         let selectedNames = new Set();
-        let currentActivityType = null;
 
-        // --- INITIALIZATION ---
+        // --- INIT ---
         const nameContainer = document.getElementById('nameContainer');
         const dateDisplay = document.getElementById('currentDateDisplay');
 
-        // Set Date
+        // Date
         const today = new Date();
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        const dateString = today.toLocaleDateString('id-ID', options);
-        dateDisplay.innerText = dateString;
+        const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+        dateDisplay.innerText = today.toLocaleDateString('id-ID', options);
 
-        // Init Default
-        function initAttendance() {
-            names.forEach(name => {
-                attendanceData[name] = 'Hadir';
-            });
+        function initData() {
+            names.forEach(name => attendanceData[name] = 'Hadir');
         }
-        initAttendance();
+        initData();
 
-        // --- RENDERING ---
-        function renderNames() {
+        // --- RENDER LIST ---
+        function initList() {
             nameContainer.innerHTML = '';
             names.forEach((name, index) => {
-                const status = attendanceData[name];
-                const isSelected = selectedNames.has(name);
-                
-                // Styling based on status
-                let statusClass = 'status-hadir'; // Default green
-                let statusText = '';
-                if (status === 'Izin') { statusClass = 'status-izin'; statusText = '(Izin)'; }
-                if (status === 'Sakit') { statusClass = 'status-sakit'; statusText = '(Sakit)'; }
-                if (status === 'Alpha') { statusClass = 'status-alpha'; statusText = '(Alpha)'; }
-
                 const div = document.createElement('div');
-                div.className = `glass-item p-2 rounded flex items-center justify-between text-xs select-none ${statusClass} ${isSelected ? 'selected' : ''}`;
-                div.onclick = () => toggleSelection(name);
+                div.id = `person-${index}`;
+                // Layout Item: Relative for status bar, padding for touch
+                div.className = `glass-item relative pl-4 pr-3 py-3.5 mb-2 rounded-lg flex items-center justify-between group cursor-pointer`;
+                div.onclick = () => toggleSelection(name, index);
                 
                 div.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="opacity-50 w-5">${index + 1}.</span>
-                        <span class="font-medium">${name}</span>
-                        ${statusText ? `<span class="text-[10px] opacity-75 font-bold ml-1">${statusText}</span>` : ''}
+                    <div class="status-indicator rounded-l-lg"></div> <!-- Status Bar Kiri -->
+                    <div class="flex items-center gap-3 w-full">
+                        <span class="text-xs font-mono opacity-40 w-5 text-right">${index + 1}</span>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-gray-100 leading-none">${name}</span>
+                            <span class="status-text text-[10px] mt-1 font-bold tracking-wide opacity-0 transition-opacity"></span>
+                        </div>
                     </div>
-                    <div class="w-2 h-2 rounded-full ${isSelected ? 'bg-emerald-400 shadow-[0_0_5px_#34d399]' : 'bg-white/10'}"></div>
+                    <!-- Checkbox Visual -->
+                    <div class="checkbox-visual w-5 h-5 rounded-full border-2 border-white/20 flex items-center justify-center transition-all">
+                        <div class="w-2.5 h-2.5 bg-emerald-400 rounded-full opacity-0 transform scale-0 transition-all"></div>
+                    </div>
                 `;
                 nameContainer.appendChild(div);
             });
+            refreshAllList();
         }
 
-        // --- INTERACTIONS ---
-        
-        function toggleSelection(name) {
+        // Partial Update for Performance
+        function updateListItem(index) {
+            const name = names[index];
+            const div = document.getElementById(`person-${index}`);
+            if (!div) return;
+
+            const status = attendanceData[name];
+            const isSelected = selectedNames.has(name);
+            
+            // Elements
+            const statusText = div.querySelector('.status-text');
+            const checkboxOuter = div.querySelector('.checkbox-visual');
+            const checkboxInner = checkboxOuter.querySelector('div');
+
+            // 1. Handle Selection State
+            if (isSelected) {
+                div.classList.add('item-selected', 'border-emerald-500/30');
+                checkboxOuter.classList.replace('border-white/20', 'border-emerald-400');
+                checkboxInner.classList.remove('opacity-0', 'scale-0');
+            } else {
+                div.classList.remove('item-selected', 'border-emerald-500/30');
+                checkboxOuter.classList.replace('border-emerald-400', 'border-white/20');
+                checkboxInner.classList.add('opacity-0', 'scale-0');
+            }
+
+            // 2. Handle Status Color
+            div.classList.remove('status-hadir', 'status-izin', 'status-sakit', 'status-alpha');
+            let textLabel = "";
+            let textColor = "";
+
+            if (status === 'Hadir') {
+                div.classList.add('status-hadir');
+                // Hadir clean, no text
+            } else {
+                if (status === 'Alpha') { div.classList.add('status-alpha'); textLabel = "ALPHA"; textColor = "text-gray-400"; }
+                if (status === 'Izin') { div.classList.add('status-izin'); textLabel = "IZIN"; textColor = "text-yellow-300"; }
+                if (status === 'Sakit') { div.classList.add('status-sakit'); textLabel = "SAKIT"; textColor = "text-red-300"; }
+            }
+
+            // 3. Status Text Label
+            if (textLabel) {
+                statusText.innerText = textLabel;
+                statusText.className = `status-text text-[10px] mt-0.5 font-bold tracking-wide opacity-100 ${textColor}`;
+            } else {
+                statusText.innerText = "";
+                statusText.classList.add('opacity-0');
+            }
+        }
+
+        function refreshAllList() {
+            names.forEach((_, idx) => updateListItem(idx));
+            updateMiniPreview();
+        }
+
+        // --- ACTIONS ---
+        function toggleSelection(name, index) {
             if (selectedNames.has(name)) {
                 selectedNames.delete(name);
             } else {
                 selectedNames.add(name);
             }
-            renderNames();
+            updateListItem(index);
         }
 
-        // FUNGSI RESET TOTAL (SEMUA KEMBALI SEMULA)
-        function resetAllData() {
-            // 1. Reset Attendance ke Hadir
-            initAttendance();
-            // 2. Reset Activity
-            activityLogs = [];
-            // 3. Reset Selection
+        function clearSelection() {
+            const indices = [];
+            selectedNames.forEach(name => {
+                const idx = names.indexOf(name);
+                if (idx !== -1) indices.push(idx);
+            });
             selectedNames.clear();
-            // 4. Reset Inputs
-            document.getElementById('activityNote').value = '';
-            
-            // Re-render
-            renderNames();
-            renderActivityPreview();
-            
-            showToast("Semua data dikembalikan ke awal");
+            indices.forEach(idx => updateListItem(idx));
+            showToast("Selection cleared");
         }
 
-        // 1. Logic Absensi
         function setStatusForSelected(status) {
             if (selectedNames.size === 0) {
-                showToast("⚠️ Pilih nama dulu!");
+                showToast("⚠️ Pilih nama dulu!", true);
                 return;
             }
-            
+
+            const indices = [];
             selectedNames.forEach(name => {
                 attendanceData[name] = status;
+                const idx = names.indexOf(name);
+                if (idx !== -1) indices.push(idx);
             });
-            
-            selectedNames.clear();
-            renderNames();
-            showToast(`✅ Status: ${status}`);
-        }
 
-        // 2. Logic Aktivitas
-        function setActivityType(btn, type) {
-            document.querySelectorAll('.act-btn').forEach(b => {
-                b.classList.remove('bg-blue-500', 'text-white', 'font-bold');
-                b.classList.add('glass-item');
-            });
-            btn.classList.remove('glass-item');
-            btn.classList.add('bg-blue-500', 'text-white', 'font-bold');
-            
-            currentActivityType = type;
+            selectedNames.clear();
+            indices.forEach(idx => updateListItem(idx));
+            showToast(`Status: ${status}`);
         }
 
         function addActivityLog() {
-            const note = document.getElementById('activityNote').value;
+            const noteInput = document.getElementById('activityNote');
+            const typeSelector = document.getElementById('activityTypeSelector');
+            const note = noteInput.value.trim();
+            const type = typeSelector.value;
 
             if (selectedNames.size === 0) {
-                showToast("⚠️ Pilih nama mahasiswa dulu!");
+                showToast("⚠️ Pilih siswa dulu!", true);
                 return;
             }
-            if (!currentActivityType) {
-                showToast("⚠️ Pilih jenis aktivitas!");
-                return;
-            }
-            if (!note.trim()) {
-                showToast("⚠️ Isi catatan aktivitas!");
+            if (!note) {
+                showToast("⚠️ Ketik catatan!", true);
                 return;
             }
 
+            const indices = [];
             selectedNames.forEach(name => {
-                activityLogs.push({
-                    name: name,
-                    type: currentActivityType,
-                    note: note
-                });
+                activityLogs.push({ name, type, note });
+                const idx = names.indexOf(name);
+                if(idx !== -1) indices.push(idx);
             });
 
-            document.getElementById('activityNote').value = '';
+            noteInput.value = '';
             selectedNames.clear();
-            renderNames();
-            renderActivityPreview();
-            showToast("✅ Aktivitas ditambahkan");
+            indices.forEach(idx => updateListItem(idx));
+            
+            showToast("Aktivitas tersimpan");
+            updateMiniPreview();
         }
 
-        function renderActivityPreview() {
-            const container = document.getElementById('activityPreview');
-            container.innerHTML = '';
-            
+        function updateMiniPreview() {
+            const el = document.getElementById('miniPreview');
             if (activityLogs.length > 0) {
-                container.classList.remove('hidden');
-                activityLogs.forEach((log, idx) => {
-                    const div = document.createElement('div');
-                    div.className = 'text-[10px] bg-white/5 p-1 rounded flex justify-between items-start border border-white/10';
-                    div.innerHTML = `
-                        <div>
-                            <span class="font-bold text-blue-200">${log.name}</span>
-                            <span class="opacity-70 mx-1">=</span>
-                            <span class="text-emerald-200">${log.type}</span>
-                            <span class="italic opacity-70">"${log.note}"</span>
-                        </div>
-                        <button onclick="removeLog(${idx})" class="text-red-400 hover:text-red-300 font-bold px-1">x</button>
-                    `;
-                    container.appendChild(div);
-                });
+                el.classList.remove('hidden');
+                el.innerText = `${activityLogs.length} Aktivitas tersimpan dalam antrean`;
             } else {
-                container.classList.add('hidden');
+                el.classList.add('hidden');
             }
         }
 
-        function removeLog(index) {
-            activityLogs.splice(index, 1);
-            renderActivityPreview();
+        function resetAllData() {
+            if(!confirm("Reset semua data kehadiran?")) return;
+            initData();
+            activityLogs = [];
+            selectedNames.clear();
+            refreshAllList();
+            showToast("Data di-reset");
         }
 
-        // --- OUTPUT GENERATOR (WHATSAPP) ---
+        // --- WHATSAPP ---
         function sendToWhatsapp() {
-            const presentList = names.filter(name => attendanceData[name] === 'Hadir');
-            const absentList = names.filter(name => attendanceData[name] !== 'Hadir');
+            const presentList = names.filter(n => attendanceData[n] === 'Hadir');
+            const absentList = names.filter(n => attendanceData[n] !== 'Hadir');
+            const dateStr = dateDisplay.innerText;
 
-            // 1. DAFTAR HADIR
-            let message = `*Daftar Nama-nama Kehadiran Mahasiswa PAI 1B*\n`;
-            message += `*Tanggal : ${dateString}*\n`; 
-            
+            let msg = `*Daftar Kehadiran Mahasiswa PAI 1B*\n*Tanggal: ${dateStr}*\n\n`;
+
+            // 1. Hadir
             if (presentList.length > 0) {
-                presentList.forEach((name, index) => {
-                    message += `${index + 1}. ${name.toUpperCase()}\n`;
-                });
+                presentList.forEach((n, i) => msg += `${i+1}. ${n.toUpperCase()}\n`);
             } else {
-                message += `(Tidak ada yang hadir)\n`;
+                msg += `(Tidak ada yang hadir)\n`;
             }
 
-            // 2. DAFTAR TIDAK HADIR
-            message += `\n*Daftar Nama-nama yang tidak hadir Mahasiswa PAI 1B*\n`;
-            message += `*Tanggal : ${dateString}*\n`;
-            
+            // 2. Tidak Hadir
+            msg += `\n*Daftar Tidak Hadir*\n`;
             if (absentList.length === 0) {
-                message += `• NIHIL\n`;
+                msg += `• NIHIL\n`;
             } else {
-                absentList.forEach(name => {
-                    const status = attendanceData[name];
-                    let textStatus = status;
-                    
-                    // UBAH TEXT UNTUK ALPHA DI SINI
-                    if (status === 'Alpha') {
-                        textStatus = 'Tanpa Keterangan';
-                    }
-
-                    message += `• ${name} (${textStatus})\n`;
+                absentList.forEach(n => {
+                    let stat = attendanceData[n];
+                    if (stat === 'Alpha') stat = 'Tanpa Keterangan';
+                    msg += `• ${n} (${stat})\n`;
                 });
             }
 
-            // 3. DAFTAR KEAKTIFAN
-            message += `\n*Daftar nama mahasiswa yang berpartisipasi aktif dalam kegiatan perkuliahan pertemuan (Bertanya, Menjawab, & Menyanggah)*\n`;
-            message += `(Bertanya, Menjawab, & Menyanggah) :\n`;
-            
+            // 3. Aktivitas
+            msg += `\n*Keaktifan (Bertanya, Menjawab, Menyanggah)*\n`;
             if (activityLogs.length === 0) {
-                message += `• Belum ada data aktivitas.`;
+                msg += `• Belum ada data.\n`;
             } else {
                 activityLogs.forEach(log => {
-                    message += `• ${log.name} = ${log.type} "${log.note}"\n`;
+                    msg += `• ${log.name} = ${log.type} "${log.note}"\n`;
                 });
             }
 
-            console.log(message);
-            const encodedMessage = encodeURIComponent(message);
-            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMessage').innerText = msg;
-            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+        function showToast(text, isError = false) {
+            const t = document.getElementById('toast');
+            t.innerText = text;
+            t.className = `fixed top-20 left-1/2 transform -translate-x-1/2 px-5 py-2.5 rounded-full shadow-2xl transition-all duration-300 translate-y-0 opacity-100 pointer-events-auto z-50 text-xs font-medium whitespace-nowrap ${isError ? 'bg-red-900/90 text-red-100 border-red-500' : 'bg-black/80 text-emerald-50 border-emerald-500/50 backdrop-blur-md border'}`;
+            
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-[-20px]');
-            }, 2500);
+                t.classList.add('opacity-0', 'translate-y-[-20px]');
+            }, 2000);
         }
 
         // Start
-        renderNames();
+        initList();
+
     </script>
 </body>
 </html>
