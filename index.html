@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Personel PAI 1B</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #064e3b; /* Dark Green Base */
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        /* Glass Effect */
+        .glass-box {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .glass-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #34d399;
+            transform: translateX(3px);
+            cursor: pointer;
+        }
+
+        .glass-item.selected {
+            background: rgba(16, 185, 129, 0.4); /* Emerald selected */
+            border-color: #34d399;
+            font-weight: 600;
+        }
+
+        /* Status Colors for List Items */
+        .status-hadir { border-left: 4px solid #10b981; } /* Green */
+        .status-izin { border-left: 4px solid #facc15; background: rgba(250, 204, 21, 0.1); } /* Yellow */
+        .status-sakit { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.1); } /* Red */
+        .status-alpha { border-left: 4px solid #9ca3af; background: rgba(156, 163, 175, 0.1); } /* Gray for Alpha */
+
+        /* Animation */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+            animation: float 20s infinite alternate;
+            z-index: -1;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 400px; height: 400px; background: #059669; }
+        .blob-2 { bottom: -10%; right: -10%; width: 300px; height: 300px; background: #047857; animation-delay: -5s; }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(20px, 40px) scale(1.1); }
+        }
+
+        .custom-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s;
+        }
+        .custom-input:focus {
+            outline: none;
+            border-color: #34d399;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Static Logo */
+        .static-logo {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 0.5rem auto;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1); 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative">
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <main class="w-full max-w-lg glass-box rounded-2xl p-5 relative z-10 flex flex-col gap-4 h-[95vh]">
+        
+        <!-- Header -->
+        <header class="text-center border-b border-white/20 pb-3 shrink-0">
+            <img src="IAINU.jpg" alt="Logo" class="static-logo" onerror="this.style.display='none'">
+            <h1 class="text-xl font-bold tracking-wider text-emerald-300">DATA KEHADIRAN PAI 1B</h1>
+            <p class="text-xs text-emerald-100/70" id="currentDateDisplay"></p>
+        </header>
+
+        <!-- Daftar Nama -->
+        <section class="flex-1 flex flex-col min-h-0">
+            <div class="flex items-center justify-between mb-2 shrink-0">
+                <h2 class="text-xs font-semibold uppercase tracking-widest text-emerald-200">
+                    Daftar Mahasiswa
+                </h2>
+                <!-- Tombol Reset Semua -->
+                <button onclick="resetAllData()" class="text-[10px] bg-red-500/20 hover:bg-red-500/40 text-red-100 border border-red-500/30 px-3 py-1 rounded transition">
+                    Reset Pilihan
+                </button>
+            </div>
+            
+            <div class="overflow-y-auto pr-1 flex-1 space-y-1" id="nameContainer">
+                <!-- Names rendered via JS -->
+            </div>
+        </section>
+
+        <!-- Panel Kontrol (Bawah) -->
+        <div class="flex flex-col gap-3 shrink-0">
+            
+            <!-- 1. Input Absensi -->
+            <div class="glass-box p-3 rounded-xl bg-black/10">
+                <p class="text-[10px] text-emerald-200 uppercase mb-2 font-bold flex justify-between">
+                    <span>1. Set Status Absensi (untuk yg dipilih)</span>
+                    <span class="text-[9px] opacity-60 normal-case">Default: Hadir</span>
+                </p>
+                <div class="grid grid-cols-3 gap-2">
+                    <!-- Tombol Hadir diubah jadi Alpha -->
+                    <button onclick="setStatusForSelected('Alpha')" class="bg-gray-600/40 hover:bg-gray-600 border border-gray-500/50 rounded py-1.5 text-xs transition">Alpha</button>
+                    <button onclick="setStatusForSelected('Izin')" class="bg-yellow-600/40 hover:bg-yellow-600 border border-yellow-500/50 rounded py-1.5 text-xs transition">Izin</button>
+                    <button onclick="setStatusForSelected('Sakit')" class="bg-red-600/40 hover:bg-red-600 border border-red-500/50 rounded py-1.5 text-xs transition">Sakit</button>
+                </div>
+            </div>
+
+            <!-- 2. Input Aktivitas -->
+            <div class="glass-box p-3 rounded-xl bg-black/10">
+                <p class="text-[10px] text-blue-200 uppercase mb-2 font-bold">2. Tambah Aktivitas (Pertanyaan/Sanggahan)</p>
+                
+                <!-- Pilihan Jenis Aktivitas -->
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                    <button onclick="setActivityType(this, 'Bertanya')" class="act-btn glass-item rounded py-1 text-xs text-center hover:bg-blue-500/30">Bertanya</button>
+                    <button onclick="setActivityType(this, 'Menjawab')" class="act-btn glass-item rounded py-1 text-xs text-center hover:bg-blue-500/30">Menjawab</button>
+                    <button onclick="setActivityType(this, 'Menyanggah')" class="act-btn glass-item rounded py-1 text-xs text-center hover:bg-blue-500/30">Menyanggah</button>
+                </div>
+
+                <!-- Input Text & Tombol Plus -->
+                <div class="flex gap-2">
+                    <textarea id="activityNote" rows="1" class="custom-input flex-1 rounded-lg p-2 text-xs resize-none" placeholder="Ketik isi aktivitas..."></textarea>
+                    
+                    <!-- Tombol Plus (+) -->
+                    <button onclick="addActivityLog()" class="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 flex items-center justify-center shadow-lg transition active:scale-95 border border-blue-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Preview Aktivitas yg sudah di-add -->
+                <div id="activityPreview" class="mt-2 max-h-20 overflow-y-auto space-y-1 hidden">
+                    <!-- Added activities appear here -->
+                </div>
+            </div>
+
+            <!-- Tombol Kirim WA -->
+            <button onclick="sendToWhatsapp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 group border border-emerald-400">
+                <span>Kirim ke WhatsApp</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 group-hover:translate-x-1 transition-transform">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12Zm0 0h7.5" />
+                </svg>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur border border-emerald-500 text-white px-4 py-2 rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-50 text-xs">
+        <span id="toastMessage">Action Success</span>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const names = [
+            "Ady Surya", "Ahmad Lubadul Fikri", "Alyvia Qurrotal ’Aini", "Anggun Lolyka Hastuti",
+            "Aqillah Mazaya", "Arina Manasika", "Devi Kurniasari", "Elok Iis Nurrohmah",
+            "Farikhatul Azizah", "Hanan Tsuroya Akyasi", "Hanni Hasanati", "Jembar Juli Yuasti",
+            "Lusi Rahmah Oktavia", "Muhammad Hanif Fakhri", "Pniel Munandar", "Putri Dwi Astuti",
+            "Riska Ayu Kesuma", "Siti Ulfatur Rohmah", "Tsabita Hasna Hanifah", "Ubaidillah Musthofa",
+            "Yoana Dian Riski Astuti", "Youvischa Aulia Arsynta", "Yuyun Lutfiyatul Kh", "Zain Nur Fadilah"
+        ];
+
+        // State Store
+        let attendanceData = {}; // Format: "Hadir", "Izin", "Sakit", "Alpha"
+        let activityLogs = [];   
+        let selectedNames = new Set();
+        let currentActivityType = null;
+
+        // --- INITIALIZATION ---
+        const nameContainer = document.getElementById('nameContainer');
+        const dateDisplay = document.getElementById('currentDateDisplay');
+
+        // Set Date
+        const today = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const dateString = today.toLocaleDateString('id-ID', options);
+        dateDisplay.innerText = dateString;
+
+        // Init Default
+        function initAttendance() {
+            names.forEach(name => {
+                attendanceData[name] = 'Hadir';
+            });
+        }
+        initAttendance();
+
+        // --- RENDERING ---
+        function renderNames() {
+            nameContainer.innerHTML = '';
+            names.forEach((name, index) => {
+                const status = attendanceData[name];
+                const isSelected = selectedNames.has(name);
+                
+                // Styling based on status
+                let statusClass = 'status-hadir'; // Default green
+                let statusText = '';
+                if (status === 'Izin') { statusClass = 'status-izin'; statusText = '(Izin)'; }
+                if (status === 'Sakit') { statusClass = 'status-sakit'; statusText = '(Sakit)'; }
+                if (status === 'Alpha') { statusClass = 'status-alpha'; statusText = '(Alpha)'; }
+
+                const div = document.createElement('div');
+                div.className = `glass-item p-2 rounded flex items-center justify-between text-xs select-none ${statusClass} ${isSelected ? 'selected' : ''}`;
+                div.onclick = () => toggleSelection(name);
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="opacity-50 w-5">${index + 1}.</span>
+                        <span class="font-medium">${name}</span>
+                        ${statusText ? `<span class="text-[10px] opacity-75 font-bold ml-1">${statusText}</span>` : ''}
+                    </div>
+                    <div class="w-2 h-2 rounded-full ${isSelected ? 'bg-emerald-400 shadow-[0_0_5px_#34d399]' : 'bg-white/10'}"></div>
+                `;
+                nameContainer.appendChild(div);
+            });
+        }
+
+        // --- INTERACTIONS ---
+        
+        function toggleSelection(name) {
+            if (selectedNames.has(name)) {
+                selectedNames.delete(name);
+            } else {
+                selectedNames.add(name);
+            }
+            renderNames();
+        }
+
+        // FUNGSI RESET TOTAL (SEMUA KEMBALI SEMULA)
+        function resetAllData() {
+            // 1. Reset Attendance ke Hadir
+            initAttendance();
+            // 2. Reset Activity
+            activityLogs = [];
+            // 3. Reset Selection
+            selectedNames.clear();
+            // 4. Reset Inputs
+            document.getElementById('activityNote').value = '';
+            
+            // Re-render
+            renderNames();
+            renderActivityPreview();
+            
+            showToast("Semua data dikembalikan ke awal");
+        }
+
+        // 1. Logic Absensi
+        function setStatusForSelected(status) {
+            if (selectedNames.size === 0) {
+                showToast("⚠️ Pilih nama dulu!");
+                return;
+            }
+            
+            selectedNames.forEach(name => {
+                attendanceData[name] = status;
+            });
+            
+            selectedNames.clear();
+            renderNames();
+            showToast(`✅ Status: ${status}`);
+        }
+
+        // 2. Logic Aktivitas
+        function setActivityType(btn, type) {
+            document.querySelectorAll('.act-btn').forEach(b => {
+                b.classList.remove('bg-blue-500', 'text-white', 'font-bold');
+                b.classList.add('glass-item');
+            });
+            btn.classList.remove('glass-item');
+            btn.classList.add('bg-blue-500', 'text-white', 'font-bold');
+            
+            currentActivityType = type;
+        }
+
+        function addActivityLog() {
+            const note = document.getElementById('activityNote').value;
+
+            if (selectedNames.size === 0) {
+                showToast("⚠️ Pilih nama mahasiswa dulu!");
+                return;
+            }
+            if (!currentActivityType) {
+                showToast("⚠️ Pilih jenis aktivitas!");
+                return;
+            }
+            if (!note.trim()) {
+                showToast("⚠️ Isi catatan aktivitas!");
+                return;
+            }
+
+            selectedNames.forEach(name => {
+                activityLogs.push({
+                    name: name,
+                    type: currentActivityType,
+                    note: note
+                });
+            });
+
+            document.getElementById('activityNote').value = '';
+            selectedNames.clear();
+            renderNames();
+            renderActivityPreview();
+            showToast("✅ Aktivitas ditambahkan");
+        }
+
+        function renderActivityPreview() {
+            const container = document.getElementById('activityPreview');
+            container.innerHTML = '';
+            
+            if (activityLogs.length > 0) {
+                container.classList.remove('hidden');
+                activityLogs.forEach((log, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'text-[10px] bg-white/5 p-1 rounded flex justify-between items-start border border-white/10';
+                    div.innerHTML = `
+                        <div>
+                            <span class="font-bold text-blue-200">${log.name}</span>
+                            <span class="opacity-70 mx-1">=</span>
+                            <span class="text-emerald-200">${log.type}</span>
+                            <span class="italic opacity-70">"${log.note}"</span>
+                        </div>
+                        <button onclick="removeLog(${idx})" class="text-red-400 hover:text-red-300 font-bold px-1">x</button>
+                    `;
+                    container.appendChild(div);
+                });
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function removeLog(index) {
+            activityLogs.splice(index, 1);
+            renderActivityPreview();
+        }
+
+        // --- OUTPUT GENERATOR (WHATSAPP) ---
+        function sendToWhatsapp() {
+            const presentList = names.filter(name => attendanceData[name] === 'Hadir');
+            const absentList = names.filter(name => attendanceData[name] !== 'Hadir');
+
+            // 1. DAFTAR HADIR
+            let message = `*Daftar Nama-nama Kehadiran Mahasiswa PAI 1B*\n`;
+            message += `*Tanggal : ${dateString}*\n`; 
+            
+            if (presentList.length > 0) {
+                presentList.forEach((name, index) => {
+                    message += `${index + 1}. ${name.toUpperCase()}\n`;
+                });
+            } else {
+                message += `(Tidak ada yang hadir)\n`;
+            }
+
+            // 2. DAFTAR TIDAK HADIR
+            message += `\n*Daftar Nama-nama yang tidak hadir Mahasiswa PAI 1B*\n`;
+            message += `*Tanggal : ${dateString}*\n`;
+            
+            if (absentList.length === 0) {
+                message += `• NIHIL\n`;
+            } else {
+                absentList.forEach(name => {
+                    const status = attendanceData[name];
+                    let textStatus = status;
+                    
+                    // UBAH TEXT UNTUK ALPHA DI SINI
+                    if (status === 'Alpha') {
+                        textStatus = 'Tanpa Keterangan';
+                    }
+
+                    message += `• ${name} (${textStatus})\n`;
+                });
+            }
+
+            // 3. DAFTAR KEAKTIFAN
+            message += `\n*Daftar nama mahasiswa yang berpartisipasi aktif dalam kegiatan perkuliahan pertemuan (Bertanya, Menjawab, & Menyanggah)*\n`;
+            message += `(Bertanya, Menjawab, & Menyanggah) :\n`;
+            
+            if (activityLogs.length === 0) {
+                message += `• Belum ada data aktivitas.`;
+            } else {
+                activityLogs.forEach(log => {
+                    message += `• ${log.name} = ${log.type} "${log.note}"\n`;
+                });
+            }
+
+            console.log(message);
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = msg;
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-20px]');
+            }, 2500);
+        }
+
+        // Start
+        renderNames();
+    </script>
+</body>
+</html>
