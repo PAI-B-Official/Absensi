@@ -98,6 +98,25 @@
             100% { transform: scale(1); opacity: 1; }
         }
         .pop-in-content { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* Accordion Animation for Activity Log */
+        .activity-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1);
+            opacity: 0;
+        }
+        .activity-content.open {
+            max-height: 100px; /* Cukup untuk menampung teks */
+            opacity: 1;
+            transition: max-height 0.3s cubic-bezier(1, 0, 1, 0), opacity 0.3s ease-in;
+        }
+        .chevron {
+            transition: transform 0.3s ease;
+        }
+        .chevron.rotate {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body class="fixed inset-0 w-full h-[100dvh] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
@@ -155,7 +174,9 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     </button>
                 </div>
-                <div id="activityPreview" class="mt-2 max-h-16 overflow-y-auto space-y-1 hidden"></div>
+                
+                <!-- Activity Preview Container (Accordion Style) -->
+                <div id="activityPreview" class="mt-2 space-y-1 hidden"></div>
             </div>
 
             <button onclick="markAllPresent()" class="w-full bg-blue-600/80 hover:bg-blue-500 text-white font-bold py-2 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 border border-blue-400/50">
@@ -192,11 +213,8 @@
             <!-- Video Container 1:1 -->
             <div class="w-64 h-64 relative mb-4 rounded-xl overflow-hidden border-2 border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                 <!-- VIDEO SOURCE -->
-                <!-- Ganti src="" dengan file video Anda. Contoh: src="video_kucing.mp4" -->
-                <!-- mix-blend-screen membuat background hitam video jadi transparan -->
                 <video id="warningVideo" class="w-full h-full object-cover mix-blend-screen bg-black" playsinline muted>
                     <source src="Huggface.WEBM" type="video/mp4">
-                    <!-- Backup text jika video gagal load -->
                     <div class="w-full h-full flex items-center justify-center bg-black text-white">Video Here</div>
                 </video>
             </div>
@@ -225,6 +243,9 @@
         let selectedNames = new Set();
         let currentActivityType = null;
         let pendingWhatsappMessage = "";
+        
+        // Flag to check if user has explicitly interacted (clicked Mark All or set Status)
+        let userHasInteracted = false;
 
         const nameContainer = document.getElementById('nameContainer');
         const dateDisplay = document.getElementById('currentDateDisplay');
@@ -293,6 +314,7 @@
             initAttendance();
             activityLogs = [];
             selectedNames.clear();
+            userHasInteracted = false; // Reset interaction flag
             document.getElementById('activityNote').value = '';
             refreshAllList();
             renderActivityPreview();
@@ -305,6 +327,7 @@
                 attendanceData[name] = 'Hadir';
             });
             refreshAllList();
+            userHasInteracted = true; // Mark as interacted so we can skip validation
             showToast("Semua terpilih & Hadir");
         }
 
@@ -318,6 +341,7 @@
             });
             selectedNames.clear();
             indicesToUpdate.forEach(idx => updateListItem(idx));
+            userHasInteracted = true; // Mark as interacted
             showToast(`✅ Status: ${status}`);
         }
 
@@ -346,34 +370,69 @@
             document.getElementById('activityNote').value = '';
             selectedNames.clear();
             indicesToUpdate.forEach(idx => updateListItem(idx));
+            userHasInteracted = true; // Mark as interacted
             renderActivityPreview();
             showToast("✅ Aktivitas ditambahkan");
         }
 
+        // --- NEW: RENDER WITH DROPDOWN & LIMIT 5 ---
         function renderActivityPreview() {
             const container = document.getElementById('activityPreview');
             container.innerHTML = '';
+            
             if (activityLogs.length > 0) {
                 container.classList.remove('hidden');
-                activityLogs.forEach((log, idx) => {
+                
+                // Get LAST 5 items, reversed (newest first)
+                const recentLogs = activityLogs.slice().reverse().slice(0, 5);
+
+                recentLogs.forEach((log, idx) => {
+                    // Need logic to remove the correct item from the original array
+                    // Since recentLogs is reversed, we need to find the original index
+                    // But for simplicity in UI, we just create the UI logic here.
+                    // For deletion, we need to know the index in the REAL activityLogs.
+                    const realIndex = activityLogs.indexOf(log); 
+
                     const div = document.createElement('div');
-                    div.className = 'text-[10px] bg-white/5 p-1 rounded flex justify-between items-start border border-white/10';
+                    div.className = 'text-[10px] bg-white/5 rounded border border-white/10 overflow-hidden';
+                    
                     div.innerHTML = `
-                        <div>
-                            <span class="font-bold text-blue-200">${log.name}</span>
-                            <span class="opacity-70 mx-1">=</span>
-                            <span class="text-emerald-200">${log.type}</span>
-                            <span class="italic opacity-70">"${log.note}"</span>
+                        <div class="p-2 flex justify-between items-center cursor-pointer hover:bg-white/5 transition-colors" onclick="toggleAccordion(this)">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-blue-200">${log.name}</span>
+                                <span class="text-xs text-emerald-300 bg-emerald-900/30 px-1 rounded">${log.type}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="removeLog(event, ${realIndex})" class="text-red-400 hover:text-red-200 font-bold px-1 z-10">x</button>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 chevron text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
                         </div>
-                        <button onclick="removeLog(${idx})" class="text-red-400 hover:text-red-300 font-bold px-1">x</button>
+                        <div class="activity-content bg-black/20">
+                            <div class="p-2 text-gray-300 italic border-t border-white/5">
+                                "${log.note}"
+                            </div>
+                        </div>
                     `;
                     container.appendChild(div);
                 });
             } else { container.classList.add('hidden'); }
         }
 
-        function removeLog(index) {
+        function toggleAccordion(headerElement) {
+            const content = headerElement.nextElementSibling;
+            const chevron = headerElement.querySelector('.chevron');
+            
+            content.classList.toggle('open');
+            chevron.classList.toggle('rotate');
+        }
+
+        function removeLog(event, index) {
+            event.stopPropagation(); // Prevent accordion toggle when clicking delete
             activityLogs.splice(index, 1);
+            
+            // If logs empty, assume interaction reset? No, keep interaction true as they edited.
             renderActivityPreview();
         }
 
@@ -382,35 +441,39 @@
             if (!modal.classList.contains('hidden')) { modal.classList.add('hidden'); }
         });
 
-        // --- NEW LOGIC FOR VALIDATION ---
+        // --- UPDATED VALIDATION LOGIC ---
         function prepareWhatsapp() {
-            // Check if user has done NOTHING (All default 'Hadir' AND No Activities)
-            const isAllHadir = names.every(name => attendanceData[name] === 'Hadir');
-            const noActivities = activityLogs.length === 0;
+            // Logic: 
+            // 1. If userClicked "Hadir Semua" or did any changes (userHasInteracted = true), SKIP validation video.
+            // 2. If user did NOTHING (default load) -> Show video.
 
-            if (isAllHadir && noActivities) {
-                // Trigger Warning Video Logic
-                const warningModal = document.getElementById('warningModal');
-                const warningVideo = document.getElementById('warningVideo');
-                
-                warningModal.classList.remove('hidden');
-                
-                // Play video if supported/ready
-                if (warningVideo) {
-                    warningVideo.currentTime = 0;
-                    warningVideo.play().catch(e => console.log("Auto-play prevented"));
+            if (!userHasInteracted) {
+                // Double check purely on data just in case
+                const isAllHadir = names.every(name => attendanceData[name] === 'Hadir');
+                const noActivities = activityLogs.length === 0;
+
+                if (isAllHadir && noActivities) {
+                    // Trigger Warning Video Logic
+                    const warningModal = document.getElementById('warningModal');
+                    const warningVideo = document.getElementById('warningVideo');
+                    
+                    warningModal.classList.remove('hidden');
+                    
+                    if (warningVideo) {
+                        warningVideo.currentTime = 0;
+                        warningVideo.play().catch(e => console.log("Auto-play prevented"));
+                    }
+
+                    setTimeout(() => {
+                        warningModal.classList.add('hidden');
+                        if (warningVideo) warningVideo.pause();
+                    }, 5500);
+
+                    return; 
                 }
-
-                // Close after 5500 ms (5.5 seconds)
-                setTimeout(() => {
-                    warningModal.classList.add('hidden');
-                    if (warningVideo) warningVideo.pause();
-                }, 5500);
-
-                return; // Stop here, don't open WA modal
             }
 
-            // Normal Flow if data exists
+            // Normal Flow if interaction occurred or data changed
             const presentList = names.filter(name => attendanceData[name] === 'Hadir');
             const absentList = names.filter(name => attendanceData[name] !== 'Hadir');
 
