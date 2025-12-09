@@ -11,14 +11,27 @@
             font-family: 'Poppins', sans-serif;
             background-color: #064e3b; /* Dark Green Base */
             color: white;
-            overflow: hidden; 
-            touch-action: none;
+            min-height: 100vh; /* Biarkan tumbuh minimal setinggi layar */
+            overflow-y: auto; /* Izinkan scroll halaman utama */
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Mulai dari atas */
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* Custom Scrollbar */
-        #nameContainer::-webkit-scrollbar, #activityListContainer::-webkit-scrollbar { width: 4px; }
-        #nameContainer::-webkit-scrollbar-track, #activityListContainer::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-        #nameContainer::-webkit-scrollbar-thumb, #activityListContainer::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 4px; }
+        #nameContainer::-webkit-scrollbar {
+            width: 4px;
+        }
+        #nameContainer::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        #nameContainer::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
 
         /* Glass Effect */
         .glass-box {
@@ -33,16 +46,25 @@
         .glass-item {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-            transform: translateZ(0);
+            transition: all 0.2s ease;
         }
 
-        .glass-item:active { transform: scale(0.98); }
+        /* Animasi Tekan (Aktif di semua device untuk item yang tidak terkunci) */
+        .glass-item:not(.locked):active { transform: scale(0.98); }
 
         .glass-item.selected {
             background: rgba(16, 185, 129, 0.4);
             border-color: #34d399;
             font-weight: 600;
+        }
+
+        /* Locked State */
+        .glass-item.locked {
+            opacity: 0.6;
+            background: rgba(0, 0, 0, 0.3);
+            border-color: transparent;
+            cursor: not-allowed;
+            pointer-events: auto;
         }
 
         /* Status Colors */
@@ -51,16 +73,14 @@
         .status-sakit { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.1); } 
         .status-alpha { border-left: 4px solid #9ca3af; background: rgba(156, 163, 175, 0.1); } 
 
-        /* Animation */
+        /* Background Blobs (Fixed agar tidak ikut scroll) */
         .blob {
-            position: absolute;
+            position: fixed;
             border-radius: 50%;
             filter: blur(60px);
             opacity: 0.6;
             animation: float 20s infinite alternate;
             z-index: -1;
-            will-change: transform;
-            transform: translate3d(0,0,0);
         }
         .blob-1 { top: -10%; left: -10%; width: 400px; height: 400px; background: #059669; }
         .blob-2 { bottom: -10%; right: -10%; width: 300px; height: 300px; background: #047857; animation-delay: -5s; }
@@ -88,71 +108,75 @@
         }
 
         /* Modal Animation */
-        #confirmModal { transition: opacity 0.3s ease; }
-        #confirmModal.hidden { pointer-events: none; opacity: 0; }
-        #confirmModal:not(.hidden) { opacity: 1; pointer-events: auto; }
+        #confirmModal, #warningModal { transition: opacity 0.3s ease; }
+        #confirmModal.hidden, #warningModal.hidden { pointer-events: none; opacity: 0; }
+        #confirmModal:not(.hidden), #warningModal:not(.hidden) { opacity: 1; pointer-events: auto; }
 
-        /* Dropdown Chevron Animation */
+        /* Pop In Animation for Warning */
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-in-content { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
         .chevron-icon { transition: transform 0.3s ease; }
         .rotate-180 { transform: rotate(180deg); }
         
-        /* Dropdown Content Animation */
         .dropdown-content {
-            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
             max-height: 0;
             opacity: 0;
             overflow: hidden;
         }
         .dropdown-content.open {
-            max-height: 200px; /* Cukup untuk scroll */
+            max-height: 2000px; 
             opacity: 1;
         }
     </style>
 </head>
-<body class="fixed inset-0 w-full h-[100dvh] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+<body class="p-3">
 
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
 
-    <main class="w-full max-w-lg glass-box rounded-2xl p-4 sm:p-5 relative z-10 flex flex-col gap-3 h-full">
-        <!-- Header -->
+    <!-- Container Utama: Dibuat fleksibel tingginya agar mengikuti konten (hapus max-h) -->
+    <main class="w-full max-w-lg glass-box rounded-2xl p-4 relative z-10 flex flex-col gap-3 my-4">
         <header class="text-center border-b border-white/20 pb-2 shrink-0">
             <img src="IAINU.jpg" alt="Logo" class="static-logo" onerror="this.style.display='none'">
-            <h1 class="text-lg sm:text-xl font-bold tracking-wider text-emerald-300">PRESENSI KEHADIRAN MAHASISWA PAI B</h1>
-            <p class="text-[10px] sm:text-xs text-emerald-100/70" id="currentDateDisplay"></p>
+            <h1 class="text-lg font-bold tracking-wider text-emerald-300">PRESENSI KEHADIRAN MAHASISWA PAI B</h1>
+            <p class="text-[10px] text-emerald-100/70" id="currentDateDisplay"></p>
         </header>
 
-        <!-- Daftar Nama (Disesuaikan tinggi agar muat ~5 nama, sisanya scroll) -->
-        <section class="flex flex-col min-h-0 relative" style="height: 220px; flex-shrink: 0;">
-            <div class="flex items-center justify-between mb-2 shrink-0">
+        <!-- Daftar Nama (Area ini Tetap Fixed 5 Baris + Scroll Internal) -->
+        <section class="flex flex-col gap-1 shrink-0">
+            <div class="flex items-center justify-between">
                 <h2 class="text-xs font-semibold uppercase tracking-widest text-emerald-200">
                     Nama-nama Mahasiswa
                 </h2>
                 <button onclick="resetAllData()" class="text-[10px] bg-red-500/20 hover:bg-red-500/40 text-red-100 border border-red-500/30 px-3 py-1 rounded transition active:scale-95">
-                    Refresh
+                    Refresh / Reset
                 </button>
             </div>
-            <div class="overflow-y-auto pr-1 flex-1 space-y-1 touch-pan-y" id="nameContainer">
-                <!-- Names rendered via JS -->
+            
+            <div class="space-y-1 overflow-y-auto pr-1 custom-scrollbar" id="nameContainer" style="max-height: 280px;">
+                <!-- List akan di-render di sini -->
             </div>
         </section>
 
-        <!-- Panel Kontrol (Mengisi sisa ruang) -->
-        <div class="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto pr-1">
-            <!-- 1. Input Absensi -->
+        <!-- Panel Kontrol (Tidak ada overflow hidden, memanjang ke bawah) -->
+        <div class="flex flex-col gap-3">
             <div class="glass-box p-3 rounded-xl bg-black/10 shrink-0">
                 <p class="text-[10px] text-emerald-200 uppercase mb-2 font-bold flex justify-between">
                     <span>Detail Keterangan :</span>
-                    <span class="text-[9px] opacity-60 normal-case">Status</span>
+                    <span class="text-[9px] opacity-60 normal-case">Pilih Status</span>
                 </p>
                 <div class="grid grid-cols-3 gap-2">
-                    <button onclick="setStatusForSelected('Alpha')" class="bg-gray-600/40 hover:bg-gray-600 border border-gray-500/50 rounded py-2 text-xs transition active:scale-95">Alpha</button>
-                    <button onclick="setStatusForSelected('Izin')" class="bg-yellow-600/40 hover:bg-yellow-600 border border-yellow-500/50 rounded py-2 text-xs transition active:scale-95">Izin</button>
-                    <button onclick="setStatusForSelected('Sakit')" class="bg-red-600/40 hover:bg-red-600 border border-red-500/50 rounded py-2 text-xs transition active:scale-95">Sakit</button>
+                    <button onclick="setStatusForSelected('Alpha')" class="bg-gray-600/40 hover:bg-gray-600 border border-gray-500/50 rounded py-2 text-xs transition active:scale-95 font-medium">Alpha</button>
+                    <button onclick="setStatusForSelected('Izin')" class="bg-yellow-600/40 hover:bg-yellow-600 border border-yellow-500/50 rounded py-2 text-xs transition active:scale-95 font-medium">Izin</button>
+                    <button onclick="setStatusForSelected('Sakit')" class="bg-red-600/40 hover:bg-red-600 border border-red-500/50 rounded py-2 text-xs transition active:scale-95 font-medium">Sakit</button>
                 </div>
             </div>
 
-            <!-- 2. Input Aktivitas & Dropdown -->
             <div class="glass-box p-3 rounded-xl bg-black/10 shrink-0">
                 <p class="text-[10px] text-blue-200 uppercase mb-2 font-bold">Mengajukan Tentang :</p>
                 <div class="grid grid-cols-3 gap-2 mb-2">
@@ -161,7 +185,6 @@
                     <button onclick="setActivityType(this, 'Menyanggah')" class="act-btn glass-item rounded py-1.5 text-xs text-center hover:bg-blue-500/30 active:scale-95">Menyanggah</button>
                 </div>
                 
-                <!-- Input Area -->
                 <div class="flex gap-2 mb-3">
                     <textarea id="activityNote" rows="1" class="custom-input flex-1 rounded-lg p-2 text-xs resize-none" placeholder="Ketik isi aktivitas..."></textarea>
                     <button onclick="addActivityLog()" class="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 flex items-center justify-center shadow-lg transition active:scale-95 border border-blue-400">
@@ -169,7 +192,6 @@
                     </button>
                 </div>
 
-                <!-- Dropdown / Accordion untuk hasil aktivitas -->
                 <div class="border-t border-white/10 pt-2">
                     <button onclick="toggleActivityDropdown()" class="w-full flex items-center justify-between text-[10px] text-blue-200 uppercase font-bold py-1 hover:bg-white/5 rounded px-2 transition">
                         <span id="activityHeader">Daftar Aktivitas (0)</span>
@@ -179,24 +201,19 @@
                     </button>
                     
                     <div id="activityDropdownContent" class="dropdown-content">
-                        <div id="activityListContainer" class="mt-2 max-h-32 overflow-y-auto space-y-1 pr-1">
-                            <!-- Daftar aktivitas muncul di sini -->
-                        </div>
+                        <!-- Container ini TIDAK punya scrollbar, dia akan tumbuh sesuai konten -->
+                        <div id="activityListContainer" class="mt-2 space-y-1"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Spacer agar tombol bawah tidak terlalu mepet -->
-            <div class="flex-1"></div>
-
-            <!-- Tombol Aksi -->
-            <div class="shrink-0 space-y-2 mt-auto">
-                <button onclick="markAllPresent()" class="w-full bg-blue-600/80 hover:bg-blue-500 text-white font-bold py-2 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 border border-blue-400/50">
+            <div class="space-y-3 mt-2 pb-2 shrink-0">
+                <button onclick="markAllPresent()" class="w-full bg-blue-600/80 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 border border-blue-400/50">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     <span>Hadir Semua</span>
                 </button>
 
-                <button onclick="prepareWhatsapp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 group border border-emerald-400">
+                <button onclick="prepareWhatsapp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 group border border-emerald-400">
                     <span>Kirim ke WhatsApp</span>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 group-hover:translate-x-1 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12Zm0 0h7.5" /></svg>
                 </button>
@@ -216,6 +233,23 @@
                 <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm font-medium transition">Batal</button>
                 <button onclick="proceedToWhatsapp()" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold shadow-lg transition transform active:scale-95">Kirim</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Peringatan (Video) -->
+    <div id="warningModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center hidden p-4">
+        <div class="pop-in-content flex flex-col items-center justify-center w-full max-w-sm text-center">
+            
+            <!-- Video Container 1:1 -->
+            <div class="w-64 h-64 relative mb-4 rounded-xl overflow-hidden border-2 border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                <!-- VIDEO SOURCE: Ganti src sesuai file Anda -->
+                <video id="warningVideo" class="w-full h-full object-cover mix-blend-screen bg-black" playsinline muted>
+                    <source src="placeholder_video.mp4" type="video/mp4">
+                    <div class="w-full h-full flex items-center justify-center bg-black text-white">Video Here</div>
+                </video>
+            </div>
+
+            <p class="text-xl font-bold text-white tracking-wider animate-pulse">Lengkapi Dulu Yaa :)</p>
         </div>
     </div>
 
@@ -240,6 +274,8 @@
         let currentActivityType = null;
         let pendingWhatsappMessage = "";
         let isDropdownOpen = false;
+        
+        let hasExplicitlyMarkedPresent = false;
 
         const nameContainer = document.getElementById('nameContainer');
         const dateDisplay = document.getElementById('currentDateDisplay');
@@ -259,15 +295,16 @@
             names.forEach((name, index) => {
                 const div = document.createElement('div');
                 div.id = `person-${index}`;
-                div.className = `glass-item p-2 rounded flex items-center justify-between text-xs select-none status-hadir`;
+                // Set default class awal
+                div.className = `glass-item p-3 rounded flex items-center justify-between text-sm select-none status-hadir cursor-pointer hover:bg-white/10`;
                 div.onclick = () => toggleSelection(name, index);
                 div.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="opacity-50 w-5">${index + 1}.</span>
+                    <div class="flex items-center gap-3">
+                        <span class="opacity-50 w-6 text-right">${index + 1}.</span>
                         <span class="font-medium">${name}</span>
-                        <span class="status-text text-[10px] opacity-75 font-bold ml-1"></span>
+                        <span class="status-text text-[10px] opacity-75 font-bold ml-1 uppercase tracking-wider"></span>
                     </div>
-                    <div class="indicator w-2 h-2 rounded-full bg-white/10"></div>
+                    <div class="indicator w-2.5 h-2.5 rounded-full bg-white/10 transition-colors duration-300"></div>
                 `;
                 nameContainer.appendChild(div);
             });
@@ -282,23 +319,58 @@
             const statusTextSpan = div.querySelector('.status-text');
             const indicator = div.querySelector('.indicator');
 
-            div.className = `glass-item p-2 rounded flex items-center justify-between text-xs select-none ${isSelected ? 'selected' : ''}`;
-            if (status === 'Hadir') div.classList.add('status-hadir');
-            else if (status === 'Izin') div.classList.add('status-izin');
-            else if (status === 'Sakit') div.classList.add('status-sakit');
-            else if (status === 'Alpha') div.classList.add('status-alpha');
+            // --- LOGIC KELAS & KLIK ---
+            let baseClass = "glass-item p-3 rounded flex items-center justify-between text-sm select-none";
+            
+            if (status === 'Hadir') {
+                // STATUS NORMAL (Bisa diklik, Ada Hover)
+                div.className = `${baseClass} cursor-pointer status-hadir hover:bg-white/10`;
+                if(isSelected) div.classList.add('selected');
+                
+                statusTextSpan.innerText = '';
+                statusTextSpan.classList.remove('text-yellow-300', 'text-red-300', 'text-gray-300');
+                
+                div.onclick = () => toggleSelection(name, index);
 
-            let text = '';
-            if (status === 'Izin') text = '(Izin)';
-            else if (status === 'Sakit') text = '(Sakit)';
-            else if (status === 'Alpha') text = '(Alpha)';
-            statusTextSpan.innerText = text;
-            indicator.className = `indicator w-2 h-2 rounded-full ${isSelected ? 'bg-emerald-400 shadow-[0_0_5px_#34d399]' : 'bg-white/10'}`;
+            } else {
+                // STATUS TERKUNCI
+                div.className = `${baseClass} locked`; 
+                if(isSelected) div.classList.add('selected');
+
+                // Block click di mobile
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    showToast("Data sudah dikunci. Klik Refresh untuk ulang."); 
+                };
+                
+                if (status === 'Izin') {
+                    div.classList.add('status-izin');
+                    statusTextSpan.innerText = 'IZIN';
+                    statusTextSpan.classList.add('text-yellow-300');
+                }
+                else if (status === 'Sakit') {
+                    div.classList.add('status-sakit');
+                    statusTextSpan.innerText = 'SAKIT';
+                    statusTextSpan.classList.add('text-red-300');
+                }
+                else if (status === 'Alpha') {
+                    div.classList.add('status-alpha');
+                    statusTextSpan.innerText = 'ALPHA';
+                    statusTextSpan.classList.add('text-gray-300');
+                }
+            }
+
+            indicator.className = `indicator w-2.5 h-2.5 rounded-full ${isSelected ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-white/10'}`;
         }
 
         function refreshAllList() { names.forEach((_, index) => updateListItem(index)); }
 
         function toggleSelection(name, index) {
+            if (attendanceData[name] !== 'Hadir') {
+                showToast("Nama ini sudah diisi (Terkunci)");
+                return;
+            }
+
             if (selectedNames.has(name)) selectedNames.delete(name);
             else selectedNames.add(name);
             updateListItem(index); 
@@ -308,36 +380,46 @@
             initAttendance();
             activityLogs = [];
             selectedNames.clear();
-            document.getElementById('activityNote').value = '';
+            hasExplicitlyMarkedPresent = false; // Reset flag
             
-            // Close dropdown if open and reset text
+            document.getElementById('activityNote').value = '';
             if(isDropdownOpen) toggleActivityDropdown();
             
+            nameContainer.innerHTML = '';
+            initList();
             refreshAllList();
             renderActivityPreview();
-            showToast("Semua data dikembalikan ke awal");
+            showToast("Semua data di-reset");
         }
 
         function markAllPresent() {
             names.forEach(name => {
-                selectedNames.add(name);
                 attendanceData[name] = 'Hadir';
             });
+            selectedNames.clear();
+            
+            hasExplicitlyMarkedPresent = true; 
+            
+            nameContainer.innerHTML = '';
+            initList();
             refreshAllList();
-            showToast("Semua terpilih & Hadir");
+            
+            showToast("Semua ditandai Hadir");
         }
 
         function setStatusForSelected(status) {
-            if (selectedNames.size === 0) { showToast("⚠️ Pilih nama dulu sayang!"); return; }
+            if (selectedNames.size === 0) { showToast("⚠️ Pilih nama dulu!"); return; }
+            
             const indicesToUpdate = [];
             selectedNames.forEach(name => {
                 attendanceData[name] = status;
                 const idx = names.indexOf(name);
                 if(idx !== -1) indicesToUpdate.push(idx);
             });
+            
             selectedNames.clear();
             indicesToUpdate.forEach(idx => updateListItem(idx));
-            showToast(`✅ Status: ${status}`);
+            showToast(`✅ Status disimpan: ${status}`);
         }
 
         function setActivityType(btn, type) {
@@ -352,7 +434,25 @@
 
         function addActivityLog() {
             const note = document.getElementById('activityNote').value;
+            
+            // 1. Cek ada yang dipilih ga
             if (selectedNames.size === 0) { showToast("⚠️ Pilih nama mahasiswa dulu!"); return; }
+
+            // 2. VALIDASI LOGIKA BARU: Cek apakah yang dipilih itu Hadir?
+            // Menggunakan Array.from karena selectedNames adalah Set
+            const selectedArray = Array.from(selectedNames);
+            
+            // Cari orang yang statusnya BUKAN Hadir (Alpha, Izin, Sakit)
+            const invalidPerson = selectedArray.find(name => attendanceData[name] !== 'Hadir');
+            
+            if (invalidPerson) {
+                const status = attendanceData[invalidPerson];
+                // Tolak aksi
+                showToast(`⚠️ Logika error: ${invalidPerson} sedang ${status}, tidak bisa mengajukan aktivitas!`);
+                return;
+            }
+
+            // ... sisa validasi normal ...
             if (!currentActivityType) { showToast("⚠️ Pilih jenis aktivitas!"); return; }
             if (!note.trim()) { showToast("⚠️ Isi catatan aktivitas!"); return; }
 
@@ -367,9 +467,7 @@
             indicesToUpdate.forEach(idx => updateListItem(idx));
             renderActivityPreview();
             
-            // Auto open dropdown when adding activity
             if (!isDropdownOpen) toggleActivityDropdown();
-            
             showToast("✅ Aktivitas ditambahkan");
         }
 
@@ -397,7 +495,7 @@
             if (activityLogs.length > 0) {
                 activityLogs.forEach((log, idx) => {
                     const div = document.createElement('div');
-                    div.className = 'text-[10px] bg-white/5 p-1 rounded flex justify-between items-start border border-white/10';
+                    div.className = 'text-[10px] bg-white/5 p-2 rounded flex justify-between items-start border border-white/10';
                     div.innerHTML = `
                         <div>
                             <span class="font-bold text-blue-200">${log.name}</span>
@@ -410,7 +508,7 @@
                     container.appendChild(div);
                 });
             } else {
-                container.innerHTML = '<div class="text-[10px] text-center opacity-50 italic">Belum ada aktivitas</div>';
+                container.innerHTML = '<div class="text-[10px] text-center opacity-50 italic py-2">Belum ada aktivitas</div>';
             }
         }
 
@@ -424,8 +522,30 @@
             if (!modal.classList.contains('hidden')) { modal.classList.add('hidden'); }
         });
 
-        // --- UPDATED LOGIC (Video Warning Removed) ---
         function prepareWhatsapp() {
+            // Cek kondisi kosong
+            const isAllHadir = names.every(name => attendanceData[name] === 'Hadir');
+            const noActivities = activityLogs.length === 0;
+
+            if (isAllHadir && noActivities && !hasExplicitlyMarkedPresent) {
+                const warningModal = document.getElementById('warningModal');
+                const warningVideo = document.getElementById('warningVideo');
+                
+                warningModal.classList.remove('hidden');
+                
+                if (warningVideo) {
+                    warningVideo.currentTime = 0;
+                    warningVideo.play().catch(e => console.log("Auto-play prevented"));
+                }
+
+                setTimeout(() => {
+                    warningModal.classList.add('hidden');
+                    if (warningVideo) warningVideo.pause();
+                }, 5500);
+
+                return; 
+            }
+
             const presentList = names.filter(name => attendanceData[name] === 'Hadir');
             const absentList = names.filter(name => attendanceData[name] !== 'Hadir');
 
@@ -480,7 +600,7 @@
 
         initList(); 
         refreshAllList(); 
-        renderActivityPreview(); // Init empty state text
+        renderActivityPreview(); 
     </script>
 </body>
 </html>
