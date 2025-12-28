@@ -1,604 +1,500 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Data Personel PAI 1B</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #064e3b; /* Dark Green Base */
-            color: white;
-            min-height: 100vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            -webkit-tap-highlight-color: transparent;
-        }
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Users, 
+  CheckCircle, 
+  XCircle, 
+  AlertCircle, 
+  HelpCircle, 
+  MessageSquare, 
+  Send, 
+  Download,
+  PlayCircle,
+  SkipForward,
+  Info
+} from 'lucide-react';
 
-        /* Custom Scrollbar */
-        #nameContainer::-webkit-scrollbar {
-            width: 4px;
-        }
-        #nameContainer::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        #nameContainer::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-        }
+// --- KONFIGURASI VERSI APLIKASI ---
+// Ganti angka ini jika Anda melakukan update web dan ingin tutorial muncul lagi
+const APP_VERSION = '1.0'; 
 
-        /* Glass Effect Optimized (No Blur for Performance) */
-        .glass-box {
-            /* Menggunakan background semi-transparan yang lebih gelap/tegas sebagai pengganti blur */
-            background: rgba(20, 30, 25, 0.4); 
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-            /* backdrop-filter: blur(8px);  <-- DIHAPUS KARENA BIKIN LAG */
-            transform: translateZ(0); /* Hardware Acceleration Hint */
-        }
+export default function App() {
+  // --- DATA AWAL ---
+  const students = [
+    "Ady Surya", "Ahmad Lubadul Fikri", "Alyvia Qurrotal ’Aini", "Anggun Lolyka Hastuti",
+    "Aqillah Mazaya", "Arina Manasika", "Devi Kurniasari", "Elok Iis Nurrohmah",
+    "Farikhatul Azizah", "Hanan Tsuroya Akyasi", "Hanni Hasanati", "Jembar Juli Yuasti",
+    "Lusi Rahmah Oktavia", "Muhammad Hanif Fakhry", "Pniel Munandar", "Putri Dwi Astuti",
+    "Riska Ayu Kesuma", "Siti Ulfatur Rohmah", "Tsabita Hasna Hanifah", "Ubaidillah Musthofa",
+    "Yoana Dian Riski Astuti", "Youvischa Aulia Arsynta", "Yuyun Lutfiyatul Kh", "Zain Nur Fadilah"
+  ];
 
-        .glass-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.1s ease, background-color 0.2s ease;
-        }
+  // --- STATE MANAGEMENT ---
+  const [attendance, setAttendance] = useState(() => {
+    const initial = {};
+    students.forEach(name => initial[name] = 'Hadir');
+    return initial;
+  });
 
-        /* Animasi Tekan Sesaat */
-        .glass-item:not(.locked):active { transform: scale(0.98); }
+  const [selectedNames, setSelectedNames] = useState(new Set());
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [activityType, setActivityType] = useState(''); 
+  const [activityNote, setActivityNote] = useState('');
+  const [showActivityList, setShowActivityList] = useState(false);
+  
+  // Tutorial State
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+  const [tutorialPosition, setTutorialPosition] = useState('bottom'); // 'top' or 'bottom'
+  const [modalType, setModalType] = useState(null);
 
-        /* Selected State */
-        .glass-item.selected {
-            background: rgba(255, 255, 255, 0.08); 
-            border-color: rgba(255, 255, 255, 0.3);
-        }
+  // Refs
+  const namesRef = useRef(null);
+  const statusRef = useRef(null);
+  const activityRef = useRef(null);
+  const sendRef = useRef(null);
 
-        /* Locked State */
-        .glass-item.locked {
-            opacity: 0.6;
-            background: rgba(0, 0, 0, 0.3);
-            border-color: transparent;
-            cursor: not-allowed;
-            pointer-events: auto;
-        }
+  // --- EFFECT: TUTORIAL CHECK WITH VERSIONING ---
+  useEffect(() => {
+    const storedVersion = localStorage.getItem('presensi_app_version');
+    
+    // Munculkan tutorial jika belum pernah lihat versi ini
+    if (storedVersion !== APP_VERSION) {
+      // Delay sedikit agar rendering selesai
+      setTimeout(() => setShowTutorial(true), 1000);
+    }
+  }, []);
 
-        /* Status Colors */
-        .status-hadir { border-left: 4px solid #10b981; } 
-        .status-izin { border-left: 4px solid #facc15; background: rgba(250, 204, 21, 0.1); } 
-        .status-sakit { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.1); } 
-        .status-alpha { border-left: 4px solid #9ca3af; background: rgba(156, 163, 175, 0.1); } 
+  // --- LOGIC HANDLERS ---
+  const toggleSelection = (name) => {
+    const newSet = new Set(selectedNames);
+    if (newSet.has(name)) newSet.delete(name);
+    else newSet.add(name);
+    setSelectedNames(newSet);
+  };
 
-        /* Background Blobs Optimized (Gradient instead of Blur Filter) */
-        .blob {
-            position: fixed;
-            z-index: -1;
-            /* filter: blur(60px); <-- DIHAPUS KARENA BERAT */
-            animation: float 20s infinite alternate;
-        }
+  const setStatus = (status) => {
+    if (selectedNames.size === 0) {
+      alert("Pilih nama mahasiswa terlebih dahulu!");
+      return;
+    }
+    setAttendance(prev => {
+      const next = { ...prev };
+      selectedNames.forEach(name => next[name] = status);
+      return next;
+    });
+    setSelectedNames(new Set());
+  };
+
+  const addActivity = () => {
+    if (selectedNames.size === 0) return alert("Pilih nama mahasiswa!");
+    if (!activityType) return alert("Pilih jenis aktivitas!");
+    if (!activityNote.trim()) return alert("Isi catatan aktivitas!");
+
+    const newLogs = [];
+    selectedNames.forEach(name => {
+      if (attendance[name] !== 'Hadir') {
+        alert(`${name} statusnya tidak hadir.`);
+        return;
+      }
+      newLogs.push({ name, type: activityType, note: activityNote });
+    });
+
+    setActivityLogs([...activityLogs, ...newLogs]);
+    setActivityNote('');
+    setSelectedNames(new Set());
+    setShowActivityList(true);
+  };
+
+  const removeActivity = (index) => {
+    const newLogs = [...activityLogs];
+    newLogs.splice(index, 1);
+    setActivityLogs(newLogs);
+  };
+
+  const handleReset = () => {
+    if(!window.confirm("Reset semua data?")) return;
+    const initial = {};
+    students.forEach(name => initial[name] = 'Hadir');
+    setAttendance(initial);
+    setActivityLogs([]);
+    setSelectedNames(new Set());
+    setActivityNote('');
+  };
+
+  const handleSendWA = () => {
+    const absent = students.filter(n => attendance[n] !== 'Hadir');
+    if (absent.length === 0 && activityLogs.length === 0 && !window.confirm("Semua Hadir & nihil aktivitas? Lanjutkan?")) {
+        return;
+    }
+    setModalType('confirm');
+  };
+
+  const processSend = () => {
+    const dateStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const present = students.filter(n => attendance[n] === 'Hadir');
+    
+    let msg = `*PRESENSI KELAS PAI 1B*\n*Tanggal:* ${dateStr}\n\n`;
+    msg += `*HADIR (${present.length}):*\n`;
+    if(present.length === 0) msg += "- Tidak ada\n";
+    else present.forEach((n, i) => msg += `${i+1}. ${n}\n`);
+    
+    msg += `\n*TIDAK HADIR:*\n`;
+    const absent = students.filter(n => attendance[n] !== 'Hadir');
+    if(absent.length === 0) msg += "- NIHIL\n";
+    else absent.forEach(n => msg += `• ${n} (${attendance[n]})\n`);
+    
+    msg += `\n*AKTIVITAS KELAS:*\n`;
+    if(activityLogs.length === 0) msg += "- Tidak ada catatan keaktifan.\n";
+    else activityLogs.forEach(log => msg += `• ${log.name}: ${log.type} "${log.note}"\n`);
+    
+    const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+    setModalType(null);
+  };
+
+  // --- TUTORIAL LOGIC ---
+  const tourSteps = [
+    {
+      target: namesRef,
+      title: "1. Pilih Mahasiswa",
+      desc: "Klik pada nama mahasiswa. Bisa pilih lebih dari satu sekaligus."
+    },
+    {
+      target: statusRef,
+      title: "2. Tentukan Status",
+      desc: "Setelah nama dipilih, klik tombol di sini (Izin/Sakit/Alpha) jika mereka tidak hadir."
+    },
+    {
+      target: activityRef,
+      title: "3. Catat Keaktifan",
+      desc: "Pilih mahasiswa, jenis kegiatan, dan isi catatan. Lalu tekan tombol (+) untuk menyimpan."
+    },
+    {
+      target: sendRef,
+      title: "4. Kirim Laporan",
+      desc: "Tekan tombol ini untuk membuat laporan otomatis ke WhatsApp."
+    }
+  ];
+
+  const nextStep = () => {
+    if (tourStep < tourSteps.length - 1) {
+      setTourStep(tourStep + 1);
+    } else {
+      endTutorial();
+    }
+  };
+
+  const endTutorial = () => {
+    setShowTutorial(false);
+    // Simpan versi saat ini ke localStorage agar tidak muncul lagi di versi ini
+    localStorage.setItem('presensi_app_version', APP_VERSION);
+    setTourStep(0);
+  };
+
+  // Logic untuk memindahkan posisi tutorial (Atas/Bawah)
+  useEffect(() => {
+    if (showTutorial) {
+      const currentRef = tourSteps[tourStep].target;
+      if (currentRef && currentRef.current) {
+        // Scroll element into view
+        currentRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
-        /* Menggunakan Radial Gradient untuk efek pendar yang ringan */
-        .blob-1 { 
-            top: -10%; left: -10%; 
-            width: 500px; height: 500px; 
-            background: radial-gradient(circle, rgba(5, 150, 105, 0.6) 0%, rgba(5, 150, 105, 0) 70%);
-        }
-        .blob-2 { 
-            bottom: -10%; right: -10%; 
-            width: 400px; height: 400px; 
-            background: radial-gradient(circle, rgba(4, 120, 87, 0.6) 0%, rgba(4, 120, 87, 0) 70%);
-            animation-delay: -5s; 
-        }
+        // Cek posisi elemen di layar
+        const rect = currentRef.current.getBoundingClientRect();
+        const screenHeight = window.innerHeight;
         
-        @keyframes float {
-            0% { transform: translate3d(0, 0, 0) scale(1); }
-            100% { transform: translate3d(20px, 40px, 0) scale(1.1); }
+        // Jika elemen ada di setengah bawah layar (> 50%), taruh tutorial di ATAS
+        // Jika elemen ada di setengah atas layar (< 50%), taruh tutorial di BAWAH
+        if (rect.top > screenHeight / 2) {
+            setTutorialPosition('top');
+        } else {
+            setTutorialPosition('bottom');
         }
+      }
+    }
+  }, [tourStep, showTutorial]);
 
-        .custom-input {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            transition: all 0.3s;
-        }
-        .custom-input:focus {
-            outline: none;
-            border-color: #34d399;
-            background: rgba(0, 0, 0, 0.4);
-        }
+  // --- RENDER HELPERS ---
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'Hadir': return 'border-l-4 border-emerald-500 hover:bg-emerald-500/10';
+      case 'Izin': return 'border-l-4 border-yellow-500 bg-yellow-500/10';
+      case 'Sakit': return 'border-l-4 border-rose-500 bg-rose-500/10';
+      case 'Alpha': return 'border-l-4 border-slate-500 bg-slate-500/10';
+      default: return '';
+    }
+  };
 
-        .static-logo {
-            width: 70px; height: 70px; margin: 0 auto 0.5rem auto;
-            object-fit: contain; display: block;
-        }
+  return (
+    <div className="min-h-screen font-sans bg-[#064e3b] text-white flex flex-col items-center p-4 relative overflow-x-hidden">
+      
+      {/* Background Blobs */}
+      <div className="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-600/30 blur-[100px] pointer-events-none animate-pulse"></div>
+      <div className="fixed bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-emerald-800/40 blur-[80px] pointer-events-none animate-pulse delay-1000"></div>
 
-        #confirmModal, #warningModal { transition: opacity 0.3s ease; }
-        #confirmModal.hidden, #warningModal.hidden { pointer-events: none; opacity: 0; }
-        #confirmModal:not(.hidden), #warningModal:not(.hidden) { opacity: 1; pointer-events: auto; }
-
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .pop-in-content { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-
-        .chevron-icon { transition: transform 0.3s ease; }
-        .rotate-180 { transform: rotate(180deg); }
+      {/* Main Container */}
+      <main className="w-full max-w-lg bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl p-5 relative z-10 flex flex-col gap-4 mb-20">
         
-        .dropdown-content {
-            transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-        }
-        .dropdown-content.open {
-            max-height: 2000px; 
-            opacity: 1;
-        }
-    </style>
-</head>
-<body class="p-3">
+        {/* Header */}
+        <header className="text-center border-b border-white/10 pb-4 relative">
+          <div className="w-16 h-16 bg-white/90 rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg">
+             <Users className="w-8 h-8 text-emerald-700" />
+          </div>
+          <h1 className="text-xl font-bold text-emerald-300 tracking-wide">PRESENSI PAI 1B</h1>
+          <p className="text-xs text-emerald-100/70 mt-1">
+            {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
 
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-
-    <main class="w-full max-w-lg glass-box rounded-2xl p-4 relative z-10 flex flex-col gap-3 my-4">
-        <header class="text-center border-b border-white/20 pb-2 shrink-0">
-            <img src="IAINU.jpg" alt="Logo" class="static-logo" onerror="this.style.display='none'">
-            <h1 class="text-lg font-bold tracking-wider text-emerald-300">PRESENSI KEHADIRAN MAHASISWA PAI B</h1>
-            <p class="text-[10px] text-emerald-100/70" id="currentDateDisplay"></p>
+          <button 
+            onClick={() => setShowTutorial(true)}
+            className="absolute top-0 right-0 p-2 text-emerald-200/50 hover:text-emerald-300 transition"
+            title="Bantuan / Tutorial"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </button>
         </header>
 
-        <!-- Daftar Nama (Scrollable Fixed Height) -->
-        <section class="flex flex-col gap-1 shrink-0">
-            <div class="flex items-center justify-between">
-                <h2 class="text-xs font-semibold uppercase tracking-widest text-emerald-200">
-                    Nama-nama Mahasiswa
-                </h2>
-                <button onclick="resetAllData()" class="text-[10px] bg-red-500/20 hover:bg-red-500/40 text-red-100 border border-red-500/30 px-3 py-1 rounded transition active:scale-95">
-                    Refresh / Reset
-                </button>
-            </div>
-            
-            <div class="space-y-1 overflow-y-auto pr-1 custom-scrollbar" id="nameContainer" style="max-height: 280px;">
-                <!-- List akan di-render di sini -->
-            </div>
+        {/* 1. Daftar Nama */}
+        <section 
+            ref={namesRef} 
+            className={`flex flex-col gap-2 transition-all duration-500 rounded-xl ${showTutorial && tourStep === 0 ? 'bg-emerald-900/40 ring-2 ring-emerald-400 p-2 shadow-[0_0_30px_rgba(52,211,153,0.3)]' : ''}`}
+        >
+          <div className="flex justify-between items-end px-1">
+            <h2 className="text-xs font-bold text-emerald-200 uppercase tracking-widest">Daftar Mahasiswa</h2>
+            <button onClick={handleReset} className="text-[10px] text-rose-300 hover:text-rose-100 bg-rose-500/20 px-2 py-1 rounded border border-rose-500/30">
+              Reset Data
+            </button>
+          </div>
+
+          <div className="max-h-[260px] overflow-y-auto pr-1 space-y-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+            {students.map((name, idx) => {
+              const status = attendance[name];
+              const isSelected = selectedNames.has(name);
+              
+              return (
+                <div 
+                  key={idx}
+                  onClick={() => toggleSelection(name)}
+                  className={`
+                    p-3 rounded-lg flex items-center justify-between text-sm cursor-pointer transition-all border border-white/5
+                    ${getStatusColor(status)}
+                    ${isSelected ? 'bg-white/20 ring-1 ring-white/50 translate-x-1' : 'bg-white/5 hover:bg-white/10'}
+                  `}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="opacity-40 text-xs w-5 text-right font-mono">{idx + 1}.</span>
+                    <span className="font-medium">{name}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {status !== 'Hadir' && (
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        status === 'Izin' ? 'text-yellow-300 bg-yellow-900/30' :
+                        status === 'Sakit' ? 'text-rose-300 bg-rose-900/30' : 
+                        'text-slate-300 bg-slate-700/50'
+                      }`}>
+                        {status.toUpperCase()}
+                      </span>
+                    )}
+                    <div className={`w-3 h-3 rounded-full transition-all ${isSelected ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-white/10'}`}></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
 
-        <!-- Panel Kontrol -->
-        <div class="flex flex-col gap-3">
-            <div class="glass-box p-3 rounded-xl bg-black/10 shrink-0">
-                <p class="text-[10px] text-emerald-200 uppercase mb-2 font-bold flex justify-between">
-                    <span>Detail Keterangan :</span>
-                    <span class="text-[9px] opacity-60 normal-case">Pilih Status</span>
-                </p>
-                <div class="grid grid-cols-3 gap-2">
-                    <button onclick="setStatusForSelected('Alpha')" class="bg-gray-600/40 hover:bg-gray-600 border border-gray-500/50 rounded py-2 text-xs transition active:scale-95 font-medium">Alpha</button>
-                    <button onclick="setStatusForSelected('Izin')" class="bg-yellow-600/40 hover:bg-yellow-600 border border-yellow-500/50 rounded py-2 text-xs transition active:scale-95 font-medium">Izin</button>
-                    <button onclick="setStatusForSelected('Sakit')" class="bg-red-600/40 hover:bg-red-600 border border-red-500/50 rounded py-2 text-xs transition active:scale-95 font-medium">Sakit</button>
-                </div>
-            </div>
+        {/* 2. Control Panel */}
+        <div className="flex flex-col gap-3">
+          
+          {/* Status Buttons */}
+          <div 
+            ref={statusRef} 
+            className={`bg-black/20 p-3 rounded-xl border border-white/5 transition-all duration-500 ${showTutorial && tourStep === 1 ? 'ring-2 ring-emerald-400 bg-emerald-900/40 shadow-[0_0_30px_rgba(52,211,153,0.3)]' : ''}`}
+          >
+             <p className="text-[10px] text-emerald-200 uppercase font-bold mb-2">Ubah Status Terpilih :</p>
+             <div className="grid grid-cols-3 gap-2">
+                {['Alpha', 'Izin', 'Sakit'].map(type => (
+                  <button 
+                    key={type}
+                    onClick={() => setStatus(type)}
+                    className={`
+                      py-2 text-xs font-medium rounded border transition active:scale-95
+                      ${type === 'Alpha' ? 'border-slate-500/50 hover:bg-slate-600/50 text-slate-200' : 
+                        type === 'Izin' ? 'border-yellow-500/50 hover:bg-yellow-600/50 text-yellow-200' :
+                        'border-rose-500/50 hover:bg-rose-600/50 text-rose-200'}
+                      bg-white/5
+                    `}
+                  >
+                    {type}
+                  </button>
+                ))}
+             </div>
+          </div>
 
-            <div class="glass-box p-3 rounded-xl bg-black/10 shrink-0">
-                <p class="text-[10px] text-blue-200 uppercase mb-2 font-bold">Mengajukan Tentang :</p>
-                <div class="grid grid-cols-3 gap-2 mb-2">
-                    <button onclick="setActivityType(this, 'Bertanya')" class="act-btn glass-item rounded py-1.5 text-xs text-center hover:bg-blue-500/30 active:scale-95">Bertanya</button>
-                    <button onclick="setActivityType(this, 'Menjawab')" class="act-btn glass-item rounded py-1.5 text-xs text-center hover:bg-blue-500/30 active:scale-95">Menjawab</button>
-                    <button onclick="setActivityType(this, 'Menyanggah')" class="act-btn glass-item rounded py-1.5 text-xs text-center hover:bg-blue-500/30 active:scale-95">Menyanggah</button>
-                </div>
-                
-                <div class="flex gap-2 mb-3">
-                    <textarea id="activityNote" rows="1" class="custom-input flex-1 rounded-lg p-2 text-xs resize-none" placeholder="Ketik isi aktivitas..."></textarea>
-                    <button onclick="addActivityLog()" class="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 flex items-center justify-center shadow-lg transition active:scale-95 border border-blue-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                    </button>
-                </div>
-
-                <div class="border-t border-white/10 pt-2">
-                    <button onclick="toggleActivityDropdown()" class="w-full flex items-center justify-between text-[10px] text-blue-200 uppercase font-bold py-1 hover:bg-white/5 rounded px-2 transition">
-                        <span id="activityHeader">Daftar Aktivitas (0)</span>
-                        <svg id="activityChevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 chevron-icon">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                        </svg>
-                    </button>
-                    
-                    <div id="activityDropdownContent" class="dropdown-content">
-                        <div id="activityListContainer" class="mt-2 space-y-1"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-3 mt-2 pb-2 shrink-0">
-                <button onclick="markAllPresent()" class="w-full bg-blue-600/80 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 border border-blue-400/50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span>Hadir Semua</span>
+          {/* Activity Log */}
+          <div 
+            ref={activityRef} 
+            className={`bg-black/20 p-3 rounded-xl border border-white/5 transition-all duration-500 ${showTutorial && tourStep === 2 ? 'ring-2 ring-emerald-400 bg-emerald-900/40 shadow-[0_0_30px_rgba(52,211,153,0.3)]' : ''}`}
+          >
+            <p className="text-[10px] text-blue-200 uppercase font-bold mb-2">Aktivitas Perkuliahan :</p>
+            
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              {['Bertanya', 'Menjawab', 'Menyanggah'].map(type => (
+                <button
+                  key={type}
+                  onClick={() => setActivityType(type)}
+                  className={`py-1.5 text-[11px] rounded transition border ${
+                    activityType === type 
+                    ? 'bg-blue-600 border-blue-400 text-white shadow-lg' 
+                    : 'bg-white/5 border-transparent text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  {type}
                 </button>
-
-                <button onclick="prepareWhatsapp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 group border border-emerald-400">
-                    <span>Kirim ke WhatsApp</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 group-hover:translate-x-1 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12Zm0 0h7.5" /></svg>
-                </button>
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal Konfirmasi WA -->
-    <div id="confirmModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="glass-box bg-gray-900/90 rounded-2xl p-6 max-w-sm w-full text-center border border-emerald-500/30 shadow-2xl transform transition-all scale-100">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 mb-4">
-                <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-            </div>
-            <h3 class="text-lg font-bold text-white mb-2">Konfirmasi</h3>
-            <p class="text-sm text-gray-300 mb-6">Data sudah siap. Kirim laporan ke WhatsApp sekarang?</p>
-            <div class="flex gap-3 justify-center">
-                <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm font-medium transition">Batal</button>
-                <button onclick="proceedToWhatsapp()" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold shadow-lg transition transform active:scale-95">Kirim</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Peringatan (Video) -->
-    <div id="warningModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center hidden p-4">
-        <div class="pop-in-content flex flex-col items-center justify-center w-full max-w-sm text-center">
-            
-            <div class="w-64 h-64 relative mb-4 rounded-xl overflow-hidden border-2 border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                <!-- VIDEO SOURCE: Ganti src sesuai file Anda -->
-                <video id="warningVideo" class="w-full h-full object-cover mix-blend-screen bg-black" playsinline muted>
-                    <source src="placeholder_video.mp4" type="video/mp4">
-                    <div class="w-full h-full flex items-center justify-center bg-black text-white">Video Here</div>
-                </video>
+              ))}
             </div>
 
-            <p class="text-xl font-bold text-white tracking-wider animate-pulse">Lengkapi Dulu Yaa :)</p>
-        </div>
-    </div>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                value={activityNote}
+                onChange={(e) => setActivityNote(e.target.value)}
+                placeholder="Isi topik/catatan..."
+                className="flex-1 bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-black/40 transition"
+              />
+              <button 
+                onClick={addActivity}
+                className="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg transition active:scale-95 shadow-lg border border-blue-400"
+              >
+                <CheckCircle className="w-5 h-5" />
+              </button>
+            </div>
 
-    <!-- Toast -->
-    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur border border-emerald-500 text-white px-4 py-2 rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none z-50 text-xs">
-        <span id="toastMessage">Action Success</span>
-    </div>
-
-    <script>
-        const names = [
-            "Ady Surya", "Ahmad Lubadul Fikri", "Alyvia Qurrotal ’Aini", "Anggun Lolyka Hastuti",
-            "Aqillah Mazaya", "Arina Manasika", "Devi Kurniasari", "Elok Iis Nurrohmah",
-            "Farikhatul Azizah", "Hanan Tsuroya Akyasi", "Hanni Hasanati", "Jembar Juli Yuasti",
-            "Lusi Rahmah Oktavia", "Muhammad Hanif Fakhry", "Pniel Munandar", "Putri Dwi Astuti",
-            "Riska Ayu Kesuma", "Siti Ulfatur Rohmah", "Tsabita Hasna Hanifah", "Ubaidillah Musthofa",
-            "Yoana Dian Riski Astuti", "Youvischa Aulia Arsynta", "Yuyun Lutfiyatul Kh", "Zain Nur Fadilah"
-        ];
-
-        let attendanceData = {}; 
-        let activityLogs = [];   
-        let selectedNames = new Set();
-        let currentActivityType = null;
-        let pendingWhatsappMessage = "";
-        let isDropdownOpen = false;
-        
-        let hasExplicitlyMarkedPresent = false;
-
-        const nameContainer = document.getElementById('nameContainer');
-        const dateDisplay = document.getElementById('currentDateDisplay');
-
-        const today = new Date();
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        const dateString = today.toLocaleDateString('id-ID', options);
-        dateDisplay.innerText = dateString;
-
-        function initAttendance() {
-            names.forEach(name => { attendanceData[name] = 'Hadir'; });
-        }
-        initAttendance();
-
-        function initList() {
-            nameContainer.innerHTML = '';
-            names.forEach((name, index) => {
-                const div = document.createElement('div');
-                div.id = `person-${index}`;
-                // Layout Update: Status di kanan, kiri indikator
-                div.className = `glass-item p-3 rounded flex items-center justify-between text-sm select-none status-hadir cursor-pointer hover:bg-white/10`;
-                div.onclick = () => toggleSelection(name, index);
-                div.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="opacity-50 w-6 text-right">${index + 1}.</span>
-                        <span class="font-medium">${name}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="status-text text-[10px] opacity-75 font-bold uppercase tracking-wider text-right"></span>
-                        <div class="indicator w-2.5 h-2.5 rounded-full bg-white/10 transition-colors duration-300 shrink-0"></div>
-                    </div>
-                `;
-                nameContainer.appendChild(div);
-            });
-        }
-
-        function updateListItem(index) {
-            const name = names[index];
-            const div = document.getElementById(`person-${index}`);
-            if (!div) return;
-            const status = attendanceData[name];
-            const isSelected = selectedNames.has(name);
-            const statusTextSpan = div.querySelector('.status-text');
-            const indicator = div.querySelector('.indicator');
-
-            let baseClass = "glass-item p-3 rounded flex items-center justify-between text-sm select-none";
-            
-            if (status === 'Hadir') {
-                // STATUS HADIR
-                // Menggunakan cursor-pointer tapi tanpa warna background 'pressed' jika selected
-                div.className = `${baseClass} cursor-pointer status-hadir hover:bg-white/10`;
-                if(isSelected) div.classList.add('selected'); // Adds indicator logic, but CSS no longer changes bg
-                
-                statusTextSpan.innerText = '';
-                statusTextSpan.classList.remove('text-yellow-300', 'text-red-300', 'text-gray-300');
-                
-                div.onclick = () => toggleSelection(name, index);
-
-            } else {
-                // STATUS TERKUNCI (Tetap Locked)
-                div.className = `${baseClass} locked`; 
-                if(isSelected) div.classList.add('selected');
-
-                div.onclick = (e) => {
-                    e.stopPropagation();
-                    showToast("Data sudah dikunci. Klik Refresh untuk ulang."); 
-                };
-                
-                if (status === 'Izin') {
-                    div.classList.add('status-izin');
-                    statusTextSpan.innerText = 'IZIN';
-                    statusTextSpan.classList.add('text-yellow-300');
-                }
-                else if (status === 'Sakit') {
-                    div.classList.add('status-sakit');
-                    statusTextSpan.innerText = 'SAKIT';
-                    statusTextSpan.classList.add('text-red-300');
-                }
-                else if (status === 'Alpha') {
-                    div.classList.add('status-alpha');
-                    statusTextSpan.innerText = 'ALPHA';
-                    statusTextSpan.classList.add('text-gray-300');
-                }
-            }
-
-            // Indikator tetap menyala hijau jika selected
-            indicator.className = `indicator w-2.5 h-2.5 rounded-full ${isSelected ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-white/10'}`;
-        }
-
-        function refreshAllList() { names.forEach((_, index) => updateListItem(index)); }
-
-        function toggleSelection(name, index) {
-            if (attendanceData[name] !== 'Hadir') {
-                showToast("Nama ini sudah diisi (Terkunci)");
-                return;
-            }
-
-            if (selectedNames.has(name)) selectedNames.delete(name);
-            else selectedNames.add(name);
-            updateListItem(index); 
-        }
-
-        function resetAllData() {
-            initAttendance();
-            activityLogs = [];
-            selectedNames.clear();
-            hasExplicitlyMarkedPresent = false;
-            
-            document.getElementById('activityNote').value = '';
-            if(isDropdownOpen) toggleActivityDropdown();
-            
-            nameContainer.innerHTML = '';
-            initList();
-            refreshAllList();
-            renderActivityPreview();
-            showToast("Semua data di-reset");
-        }
-
-        function markAllPresent() {
-            names.forEach(name => {
-                attendanceData[name] = 'Hadir';
-            });
-            selectedNames.clear();
-            
-            hasExplicitlyMarkedPresent = true; 
-            
-            nameContainer.innerHTML = '';
-            initList();
-            refreshAllList();
-            
-            showToast("Semua ditandai Hadir");
-        }
-
-        function setStatusForSelected(status) {
-            if (selectedNames.size === 0) { showToast("⚠️ Pilih nama dulu!"); return; }
-            
-            const indicesToUpdate = [];
-            selectedNames.forEach(name => {
-                attendanceData[name] = status;
-                const idx = names.indexOf(name);
-                if(idx !== -1) indicesToUpdate.push(idx);
-            });
-            
-            selectedNames.clear();
-            indicesToUpdate.forEach(idx => updateListItem(idx));
-            showToast(`✅ Status disimpan: ${status}`);
-        }
-
-        function setActivityType(btn, type) {
-            document.querySelectorAll('.act-btn').forEach(b => {
-                b.classList.remove('bg-blue-500', 'text-white', 'font-bold');
-                b.classList.add('glass-item');
-            });
-            btn.classList.remove('glass-item');
-            btn.classList.add('bg-blue-500', 'text-white', 'font-bold');
-            currentActivityType = type;
-        }
-
-        function addActivityLog() {
-            const note = document.getElementById('activityNote').value;
-            
-            if (selectedNames.size === 0) { showToast("⚠️ Pilih nama mahasiswa dulu!"); return; }
-
-            const selectedArray = Array.from(selectedNames);
-            const invalidPerson = selectedArray.find(name => attendanceData[name] !== 'Hadir');
-            
-            if (invalidPerson) {
-                const status = attendanceData[invalidPerson];
-                showToast(`⚠️ Logika error: ${invalidPerson} sedang ${status}, tidak bisa mengajukan aktivitas!`);
-                return;
-            }
-
-            if (!currentActivityType) { showToast("⚠️ Pilih jenis aktivitas!"); return; }
-            if (!note.trim()) { showToast("⚠️ Isi catatan aktivitas!"); return; }
-
-            const indicesToUpdate = [];
-            selectedNames.forEach(name => {
-                activityLogs.push({ name: name, type: currentActivityType, note: note });
-                const idx = names.indexOf(name);
-                if(idx !== -1) indicesToUpdate.push(idx);
-            });
-            document.getElementById('activityNote').value = '';
-            selectedNames.clear();
-            indicesToUpdate.forEach(idx => updateListItem(idx));
-            renderActivityPreview();
-            
-            if (!isDropdownOpen) toggleActivityDropdown();
-            showToast("✅ Aktivitas ditambahkan");
-        }
-
-        function toggleActivityDropdown() {
-            isDropdownOpen = !isDropdownOpen;
-            const content = document.getElementById('activityDropdownContent');
-            const chevron = document.getElementById('activityChevron');
-            
-            if (isDropdownOpen) {
-                content.classList.add('open');
-                chevron.classList.add('rotate-180');
-            } else {
-                content.classList.remove('open');
-                chevron.classList.remove('rotate-180');
-            }
-        }
-
-        function renderActivityPreview() {
-            const container = document.getElementById('activityListContainer');
-            const header = document.getElementById('activityHeader');
-            container.innerHTML = '';
-            
-            header.innerText = `Daftar Aktivitas (${activityLogs.length})`;
-
-            if (activityLogs.length > 0) {
-                activityLogs.forEach((log, idx) => {
-                    const div = document.createElement('div');
-                    div.className = 'text-[10px] bg-white/5 p-2 rounded flex justify-between items-start border border-white/10';
-                    div.innerHTML = `
-                        <div>
-                            <span class="font-bold text-blue-200">${log.name}</span>
-                            <span class="opacity-70 mx-1">=</span>
-                            <span class="text-emerald-200">${log.type}</span>
-                            <span class="italic opacity-70">"${log.note}"</span>
+            {/* List Toggle */}
+            <div className="mt-3 pt-2 border-t border-white/10">
+              <button 
+                onClick={() => setShowActivityList(!showActivityList)}
+                className="w-full flex justify-between items-center text-[10px] text-blue-300 hover:bg-white/5 p-1 rounded transition"
+              >
+                <span>Daftar Aktivitas ({activityLogs.length})</span>
+                <span className={`transform transition ${showActivityList ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              
+              {showActivityList && (
+                 <div className="mt-2 space-y-1">
+                    {activityLogs.length === 0 ? (
+                      <p className="text-[10px] text-center italic text-white/30 py-2">Belum ada data.</p>
+                    ) : (
+                      activityLogs.map((log, i) => (
+                        <div key={i} className="flex justify-between items-start bg-white/5 p-2 rounded text-[10px]">
+                          <div>
+                            <span className="font-bold text-blue-200">{log.name}</span>
+                            <span className="mx-1 text-white/40">|</span>
+                            <span className="text-emerald-300">{log.type}</span>
+                            <p className="text-white/60 italic">"{log.note}"</p>
+                          </div>
+                          <button onClick={() => removeActivity(i)} className="text-rose-400 hover:text-rose-200">
+                            <XCircle className="w-3 h-3" />
+                          </button>
                         </div>
-                        <button onclick="removeLog(${idx})" class="text-red-400 hover:text-red-300 font-bold px-1">x</button>
-                    `;
-                    container.appendChild(div);
-                });
-            } else {
-                container.innerHTML = '<div class="text-[10px] text-center opacity-50 italic py-2">Belum ada aktivitas</div>';
-            }
-        }
+                      ))
+                    )}
+                 </div>
+              )}
+            </div>
+          </div>
 
-        function removeLog(index) {
-            activityLogs.splice(index, 1);
-            renderActivityPreview();
-        }
+          {/* Send Button */}
+          <button 
+            ref={sendRef}
+            onClick={handleSendWA}
+            className={`
+              w-full py-4 rounded-xl font-bold text-white shadow-xl flex items-center justify-center gap-2 border border-emerald-400/50
+              bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 
+              transition active:scale-95 group
+              ${showTutorial && tourStep === 3 ? 'ring-2 ring-white ring-offset-2 ring-offset-emerald-900 animate-pulse' : ''}
+            `}
+          >
+            <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <span>Kirim ke WhatsApp</span>
+          </button>
 
-        window.addEventListener('popstate', function(event) {
-            const modal = document.getElementById('confirmModal');
-            if (!modal.classList.contains('hidden')) { modal.classList.add('hidden'); }
-        });
+        </div>
+      </main>
 
-        function prepareWhatsapp() {
-            const isAllHadir = names.every(name => attendanceData[name] === 'Hadir');
-            const noActivities = activityLogs.length === 0;
-
-            if (isAllHadir && noActivities && !hasExplicitlyMarkedPresent) {
-                const warningModal = document.getElementById('warningModal');
-                const warningVideo = document.getElementById('warningVideo');
-                
-                warningModal.classList.remove('hidden');
-                
-                if (warningVideo) {
-                    warningVideo.currentTime = 0;
-                    warningVideo.play().catch(e => console.log("Auto-play prevented"));
-                }
-
-                setTimeout(() => {
-                    warningModal.classList.add('hidden');
-                    if (warningVideo) warningVideo.pause();
-                }, 5500);
-
-                return; 
-            }
-
-            const presentList = names.filter(name => attendanceData[name] === 'Hadir');
-            const absentList = names.filter(name => attendanceData[name] !== 'Hadir');
-
-            let message = `*Daftar Kehadiran Mahasiswa PAI 1B*\n`;
-            message += `*Tanggal : ${dateString}*\n`; 
+      {/* --- TUTORIAL CARD (NON-BLOCKING) --- */}
+      {showTutorial && (
+        <div className={`fixed left-0 right-0 z-50 flex justify-center p-4 transition-all duration-500 ${
+            tutorialPosition === 'top' ? 'top-0' : 'bottom-0'
+        }`}>
+          <div className="bg-white/95 backdrop-blur-md text-slate-800 p-5 rounded-2xl shadow-2xl max-w-sm w-full border-t-4 border-emerald-500 animate-[popIn_0.3s_ease-out]">
+            <div className="flex items-center justify-between mb-2">
+                <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  Panduan {tourStep + 1}/{tourSteps.length}
+                </span>
+                <button onClick={endTutorial} className="text-slate-400 hover:text-rose-500">
+                    <XCircle className="w-5 h-5" />
+                </button>
+            </div>
             
-            if (presentList.length > 0) {
-                presentList.forEach((name, index) => {
-                    message += `${index + 1}. ${name.toUpperCase()}\n`;
-                });
-            } else { message += `(Tidak ada yang hadir)\n`; }
-
-            message += `\n*Daftar Tidak Hadir Mahasiswa PAI 1B*\n`;
-            if (absentList.length === 0) { message += `• NIHIL\n`; } 
-            else {
-                absentList.forEach(name => {
-                    const status = attendanceData[name];
-                    let textStatus = status;
-                    if (status === 'Alpha') textStatus = 'Tanpa Keterangan';
-                    message += `• ${name} (${textStatus})\n`;
-                });
-            }
-
-            message += `\n*Daftar Nama Mahasiswa Aktif Kegiatan Perkuliahan (Bertanya, Menjawab, & Menyanggah)*\n`;
-            if (activityLogs.length === 0) { message += `• Tidak ada.`; } 
-            else {
-                activityLogs.forEach(log => {
-                    message += `• ${log.name} : ${log.type} "${log.note}"\n`;
-                });
-            }
+            <h3 className="font-bold text-lg text-emerald-800 mb-1">
+              {tourSteps[tourStep].title}
+            </h3>
+            <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+              {tourSteps[tourStep].desc}
+            </p>
             
-            pendingWhatsappMessage = message;
-            document.getElementById('confirmModal').classList.remove('hidden');
-            history.pushState({ modalOpen: true }, "", "#confirm");
-        }
+            <div className="flex justify-end gap-3">
+                {tourStep > 0 && (
+                  <button 
+                    onClick={() => setTourStep(tourStep - 1)}
+                    className="text-sm text-slate-500 hover:text-slate-700 font-medium px-2"
+                  >
+                    Kembali
+                  </button>
+                )}
+                <button 
+                  onClick={nextStep}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg transition active:scale-95 flex items-center gap-2"
+                >
+                  {tourStep === tourSteps.length - 1 ? 'Selesai' : 'Lanjut'}
+                  <SkipForward className="w-3 h-3" />
+                </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-        function closeConfirmModal() { history.back(); }
+      {/* --- MODAL CONFIRMATION --- */}
+      {modalType === 'confirm' && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-emerald-500/30 p-6 rounded-2xl w-full max-w-sm text-center shadow-2xl">
+            <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageSquare className="w-6 h-6 text-emerald-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Kirim Laporan?</h3>
+            <p className="text-sm text-slate-300 mb-6">
+              Aplikasi akan membuka WhatsApp dengan format laporan yang sudah tersusun rapi.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setModalType(null)}
+                className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition"
+              >
+                Batal
+              </button>
+              <button 
+                onClick={processSend}
+                className="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg transition"
+              >
+                Buka WA
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-        function proceedToWhatsapp() {
-            const encodedMessage = encodeURIComponent(pendingWhatsappMessage);
-            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
-            resetAllData();
-            history.back();
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMessage').innerText = msg;
-            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
-            setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-[-20px]'); }, 2500);
-        }
-
-        initList(); 
-        refreshAllList(); 
-        renderActivityPreview(); 
-    </script>
-</body>
-</html>
+    </div>
+  );
+}
