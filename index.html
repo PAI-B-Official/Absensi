@@ -70,24 +70,30 @@
         .dropdown-content { transition: max-height 0.4s ease-out, opacity 0.3s ease-out; max-height: 0; opacity: 0; overflow: hidden; }
         .dropdown-content.open { max-height: 2000px; opacity: 1; }
 
-        /* --- TUTORIAL / TOUR STYLES (NEW) --- */
+        /* --- TUTORIAL / TOUR STYLES (UPDATED) --- */
         
-        /* Overlay Gelap untuk fokus */
+        /* Overlay Gelap: pointer-events NONE agar bisa scroll */
         #tourOverlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.75);
             z-index: 999;
             opacity: 0; transition: opacity 0.5s ease;
-            pointer-events: none;
+            pointer-events: none !important; /* Allow scroll through overlay */
         }
-        #tourOverlay.active { opacity: 1; pointer-events: auto; }
+        #tourOverlay.active { opacity: 1; }
 
-        /* Element yang sedang disorot */
-        .tour-highlight {
+        /* Saat Mode Tutorial: Matikan interaksi elemen lain */
+        body.tutorial-mode main {
+            pointer-events: none; /* Disable click on background items */
+        }
+
+        /* Nyalakan interaksi HANYA untuk elemen yang disorot */
+        body.tutorial-mode .tour-highlight {
+            pointer-events: auto !important;
             position: relative;
             z-index: 1000 !important;
             box-shadow: 0 0 0 4px #34d399, 0 0 40px rgba(0,0,0,0.5);
-            background-color: #064e3b !important; /* Force solid bg agar teks terbaca jelas */
+            background-color: #064e3b !important;
             border-radius: 12px;
             transition: all 0.3s ease;
         }
@@ -105,13 +111,12 @@
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             opacity: 0;
             transform: translateY(10px) scale(0.95);
-            pointer-events: none;
+            pointer-events: auto !important; /* Tooltip must be clickable */
         }
 
         #tourTooltip.visible {
             opacity: 1;
             transform: translateY(0) scale(1);
-            pointer-events: auto;
         }
 
         /* Arrow/Tail for tooltip */
@@ -544,11 +549,13 @@
 
         function startTutorial() {
             currentStepIdx = 0;
+            document.body.classList.add('tutorial-mode'); // Enable tutorial constraints
             document.getElementById('tourOverlay').classList.add('active');
             showStep();
         }
 
         function endTutorial() {
+            document.body.classList.remove('tutorial-mode'); // Disable constraints
             document.getElementById('tourOverlay').classList.remove('active');
             document.getElementById('tourTooltip').classList.remove('visible');
             
