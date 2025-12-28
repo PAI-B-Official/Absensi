@@ -70,35 +70,43 @@
         .dropdown-content { transition: max-height 0.4s ease-out, opacity 0.3s ease-out; max-height: 0; opacity: 0; overflow: hidden; }
         .dropdown-content.open { max-height: 2000px; opacity: 1; }
 
-        /* --- TUTORIAL / TOUR STYLES (ENHANCED) --- */
+        /* --- TUTORIAL / TOUR STYLES (UPDATED) --- */
         
-        /* Overlay Gelap untuk fokus */
+        /* Overlay Invisible (Transparan) */
         #tourOverlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.85); /* Lebih gelap agar kontras lebih tinggi */
+            background: transparent; /* HAPUS WARNA HITAM */
             z-index: 999;
-            opacity: 0; transition: opacity 0.5s ease;
-            pointer-events: none;
-            touch-action: none; 
+            display: none; /* Default hidden */
         }
-        #tourOverlay.active { opacity: 1; pointer-events: auto; }
+        #tourOverlay.active { display: block; }
 
-        /* Element yang sedang disorot */
+        /* Element yang sedang disorot (SPOTLIGHT) */
         .tour-highlight {
             position: relative;
-            z-index: 1000 !important; /* Di atas overlay */
-            box-shadow: 0 0 0 4px #34d399, 0 0 30px rgba(0,0,0,0.5); 
-            background-color: #064e3b !important; /* Solid bg agar tidak tembus overlay */
+            z-index: 1000 !important;
+            
+            /* Ganti shadow tebal dengan Glow Hijau Halus */
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.6); 
+            border: 1px solid rgba(52, 211, 153, 0.8);
+            
             border-radius: 12px;
             transition: box-shadow 0.3s ease, transform 0.3s ease;
-            scroll-margin: 150px; /* Memberi jarak saat discroll otomatis */
+            scroll-margin: 150px; 
+            
+            /* Sedikit efek scale up agar terlihat menonjol */
+            transform: scale(1.02); 
+            background-color: rgba(6, 78, 59, 0.9); /* Sedikit background agar teks terbaca jika ada elemen overlap */
         }
 
         /* Tooltip Box Tutorial */
         #tourTooltip {
             position: fixed;
-            z-index: 1001; /* Di atas highlight */
-            width: 280px;
+            z-index: 1001; 
+            width: auto;
+            max-width: 280px; 
+            min-width: 220px; 
+            
             background: white;
             color: #1f2937;
             border-radius: 16px;
@@ -116,7 +124,6 @@
             pointer-events: auto;
         }
 
-        /* Arrow/Tail for tooltip */
         #tourTooltipArrow {
             position: absolute;
             width: 14px;
@@ -126,7 +133,6 @@
             z-index: -1;
         }
 
-        /* Utility Class untuk Lock Scroll pada Body */
         body.tour-active {
             overflow: hidden !important; 
             height: 100vh;
@@ -142,7 +148,6 @@
     <!-- Tutorial Overlay Backdrop -->
     <div id="tourOverlay"></div>
 
-    <!-- HAPUS CLASS 'z-10' DISINI AGAR HIGHLIGHT BISA MUNCUL DI ATAS OVERLAY -->
     <main class="w-full max-w-lg glass-box rounded-2xl p-4 relative flex flex-col gap-3 my-4">
         
         <!-- Header Section -->
@@ -151,7 +156,6 @@
             <h1 class="text-lg font-bold tracking-wider text-emerald-300">PRESENSI KEHADIRAN MAHASISWA PAI B</h1>
             <p class="text-[10px] text-emerald-100/70" id="currentDateDisplay"></p>
 
-            <!-- Tombol Bantuan Manual -->
             <button onclick="restartTutorial()" class="absolute top-0 right-0 p-2 text-emerald-200/50 hover:text-emerald-300 transition" title="Bantuan / Tutorial">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
@@ -223,11 +227,6 @@
 
             <!-- Send Panel -->
             <div id="tour-send" class="space-y-3 mt-2 pb-2 shrink-0 p-2 rounded-xl transition-all duration-300">
-                <button onclick="markAllPresent()" class="w-full bg-blue-600/80 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 border border-blue-400/50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span>Hadir Semua</span>
-                </button>
-
                 <button onclick="prepareWhatsapp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 group border border-emerald-400">
                     <span>Kirim ke WhatsApp</span>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 group-hover:translate-x-1 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12Zm0 0h7.5" /></svg>
@@ -235,11 +234,10 @@
             </div>
         </div>
 
-        <!-- Footer Penutup -->
         <footer class="text-center mt-4 pt-4 border-t border-white/10 shrink-0">
             <p class="text-[10px] text-emerald-200/50">
-                &copy; 2024 Sistem Presensi PAI 1B.<br/>
-                Dibuat dengan Teliti & Aman.
+                &copy; 2025 PAI B - IAINU KEBUMEN. All Rights Reserved.<br/>
+                Autorize by Hann_id.
             </p>
         </footer>
     </main>
@@ -295,7 +293,7 @@
 
     <script>
         // --- TUTORIAL VERSION CONFIGURATION ---
-        const TUTORIAL_VERSION = "1.3"; // Naikkan versi agar tutorial muncul lagi untuk test
+        const TUTORIAL_VERSION = "1.6"; // Bump version untuk memicu tutorial ulang
 
         // --- DATA & VARIABLES ---
         const names = [
@@ -313,7 +311,6 @@
         let currentActivityType = null;
         let pendingWhatsappMessage = "";
         let isDropdownOpen = false;
-        let hasExplicitlyMarkedPresent = false;
 
         const nameContainer = document.getElementById('nameContainer');
         const dateDisplay = document.getElementById('currentDateDisplay');
@@ -387,18 +384,11 @@
         }
 
         function resetAllData() {
-            initAttendance(); activityLogs = []; selectedNames.clear(); hasExplicitlyMarkedPresent = false;
+            initAttendance(); activityLogs = []; selectedNames.clear(); 
             document.getElementById('activityNote').value = '';
             if(isDropdownOpen) toggleActivityDropdown();
             nameContainer.innerHTML = ''; initList(); refreshAllList(); renderActivityPreview();
             showToast("Semua data di-reset");
-        }
-
-        function markAllPresent() {
-            names.forEach(name => { attendanceData[name] = 'Hadir'; });
-            selectedNames.clear(); hasExplicitlyMarkedPresent = true; 
-            nameContainer.innerHTML = ''; initList(); refreshAllList();
-            showToast("Semua ditandai Hadir");
         }
 
         function setStatusForSelected(status) {
@@ -488,7 +478,8 @@
         function prepareWhatsapp() {
             const isAllHadir = names.every(name => attendanceData[name] === 'Hadir');
             const noActivities = activityLogs.length === 0;
-            if (isAllHadir && noActivities && !hasExplicitlyMarkedPresent) {
+            
+            if (isAllHadir && noActivities) {
                 const warningModal = document.getElementById('warningModal');
                 const warningVideo = document.getElementById('warningVideo');
                 warningModal.classList.remove('hidden');
@@ -533,13 +524,12 @@
             { id: 'tour-names', title: 'Pilih Nama', desc: 'Klik nama mahasiswa untuk memilihnya. Secara default, status mereka adalah Hadir (Hijau).' },
             { id: 'tour-status', title: 'Ubah Status', desc: 'Jika ada yang tidak hadir, pilih namanya lalu klik tombol status (Izin/Sakit/Alpha) di sini.' },
             { id: 'tour-activity', title: 'Catat Aktivitas', desc: 'Catat keaktifan mahasiswa (bertanya/menjawab) dengan memilih nama, jenis, dan mengisi catatan.' },
-            { id: 'tour-send', title: 'Kirim Laporan', desc: 'Jika selesai, tekan tombol ini untuk mengirim laporan rapi langsung ke WhatsApp.' }
+            { id: 'tour-send', title: 'Kirim Laporan', desc: 'Terakhir, tekan tombol "Kirim ke WhatsApp" untuk membuat laporan presensi otomatis yang rapi.' }
         ];
         
         let currentStepIdx = 0;
         let isTransitioning = false;
 
-        // --- Scroll Locking Mechanism ---
         function preventDefault(e) { e.preventDefault(); }
         function preventDefaultForScrollKeys(e) {
             const keys = {37: 1, 38: 1, 39: 1, 40: 1, 32: 1, 33: 1, 34: 1, 35: 1, 36: 1};
@@ -617,66 +607,51 @@
             if (targetEl) {
                 targetEl.classList.add('tour-highlight');
                 
-                // --- SCROLLING MAGIC REVISED ---
-                // Gunakan center untuk desktop, tapi cek tinggi untuk mobile
                 setTimeout(() => {
                     targetEl.scrollIntoView({ 
                         behavior: 'smooth', 
-                        block: 'center', // Usahakan di tengah
+                        block: 'center', 
                         inline: 'center' 
                     });
                 }, 50);
             }
 
-            // Update Konten
             document.getElementById('tourTitle').innerText = step.title;
             document.getElementById('tourDesc').innerText = step.desc;
             document.getElementById('tourStepBadge').innerText = `${currentStepIdx + 1}/${tourSteps.length}`;
             document.getElementById('tourNextBtn').innerText = (currentStepIdx === tourSteps.length - 1) ? 'Selesai' : 'Lanjut';
 
-            // --- POSISI PINTAR (SMART POSITIONING) REVISED ---
             setTimeout(() => {
                 if (targetEl) {
                     const rect = targetEl.getBoundingClientRect();
-                    const tooltipW = 280; 
-                    const tooltipH = 180; // Estimasi tinggi tooltip
+                    const tooltipW = tooltip.offsetWidth; 
+                    const tooltipH = tooltip.offsetHeight; 
                     const arrowSize = 8; 
                     const viewportH = window.innerHeight;
-                    
-                    // Logika: Jika target ada di bagian atas layar (> 60% ke atas), taruh tooltip DI BAWAHNYA.
-                    // Jika target ada di bagian bawah layar, taruh tooltip DI ATASNYA.
-                    // Ini mencegah tooltip menutupi elemen yang sedang difokuskan (scrollIntoView center).
                     
                     const screenCenterY = viewportH / 2;
                     const targetCenterY = rect.top + (rect.height / 2);
                     
                     let topPos, isTopArrow;
-                    
-                    // Jarak aman (padding) agar tidak nempel banget dengan elemen
                     const safeGap = 20;
 
                     if (targetCenterY < screenCenterY) {
-                        // Target di atas tengah layar -> Tooltip di BAWAH target
                         topPos = rect.bottom + safeGap;
-                        isTopArrow = true; // Panah menunjuk ke atas (ke arah target)
+                        isTopArrow = true; 
                     } else {
-                        // Target di bawah tengah layar -> Tooltip di ATAS target
                         topPos = rect.top - tooltipH - safeGap;
-                        isTopArrow = false; // Panah menunjuk ke bawah
+                        isTopArrow = false; 
                     }
 
-                    // Horizontal Centering
                     const targetCenterX = rect.left + (rect.width / 2);
                     let leftPos = targetCenterX - (tooltipW / 2);
 
-                    // Clamp Screen Edge (biar gak kepotong kiri kanan)
                     if (leftPos < 15) leftPos = 15;
                     if (leftPos + tooltipW > window.innerWidth) leftPos = window.innerWidth - tooltipW - 15;
 
                     tooltip.style.top = `${topPos}px`;
                     tooltip.style.left = `${leftPos}px`;
 
-                    // Arrow Position
                     let arrowLeft = targetCenterX - leftPos - arrowSize;
                     if (arrowLeft < 15) arrowLeft = 15;
                     if (arrowLeft > tooltipW - 30) arrowLeft = tooltipW - 30;
@@ -698,7 +673,6 @@
             }, 350); 
         }
 
-        // --- INIT ---
         initList(); 
         refreshAllList(); 
         renderActivityPreview(); 
