@@ -70,33 +70,37 @@
         .dropdown-content { transition: max-height 0.4s ease-out, opacity 0.3s ease-out; max-height: 0; opacity: 0; overflow: hidden; }
         .dropdown-content.open { max-height: 2000px; opacity: 1; }
 
-        /* --- TUTORIAL / TOUR STYLES (UPDATED) --- */
+        /* --- TUTORIAL / TOUR STYLES (UPDATED v1.7) --- */
         
-        /* Overlay Invisible (Transparan) */
+        /* Overlay Redup 20% */
         #tourOverlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: transparent; /* HAPUS WARNA HITAM */
+            background: rgba(0, 0, 0, 0.4); /* Redup 20% */
             z-index: 999;
-            display: none; /* Default hidden */
+            opacity: 0; transition: opacity 0.5s ease;
+            pointer-events: none;
+            touch-action: none; 
         }
-        #tourOverlay.active { display: block; }
+        #tourOverlay.active { opacity: 1; pointer-events: auto; }
 
         /* Element yang sedang disorot (SPOTLIGHT) */
         .tour-highlight {
             position: relative;
             z-index: 1000 !important;
             
-            /* Ganti shadow tebal dengan Glow Hijau Halus */
-            box-shadow: 0 0 15px rgba(52, 211, 153, 0.6); 
-            border: 1px solid rgba(52, 211, 153, 0.8);
+            /* Efek Neon Hijau Kuat */
+            box-shadow: 
+                0 0 0 2px #34d399, /* Border Tipis */
+                0 0 20px rgba(52, 211, 153, 0.8), /* Glow Neon Dalam */
+                0 0 45px rgba(52, 211, 153, 0.4); /* Glow Neon Luar */
             
+            background-color: #064e3b !important; /* Solid background agar tidak transparan */
             border-radius: 12px;
             transition: box-shadow 0.3s ease, transform 0.3s ease;
             scroll-margin: 150px; 
             
-            /* Sedikit efek scale up agar terlihat menonjol */
-            transform: scale(1.02); 
-            background-color: rgba(6, 78, 59, 0.9); /* Sedikit background agar teks terbaca jika ada elemen overlap */
+            /* Zoom Sedikit (Scale Up) */
+            transform: scale(1.05); 
         }
 
         /* Tooltip Box Tutorial */
@@ -293,7 +297,7 @@
 
     <script>
         // --- TUTORIAL VERSION CONFIGURATION ---
-        const TUTORIAL_VERSION = "1.6"; // Bump version untuk memicu tutorial ulang
+        const TUTORIAL_VERSION = "1.7"; // Bump version untuk memicu tutorial ulang
 
         // --- DATA & VARIABLES ---
         const names = [
