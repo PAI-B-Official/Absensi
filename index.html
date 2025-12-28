@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -70,32 +70,27 @@
         .dropdown-content { transition: max-height 0.4s ease-out, opacity 0.3s ease-out; max-height: 0; opacity: 0; overflow: hidden; }
         .dropdown-content.open { max-height: 2000px; opacity: 1; }
 
-        /* --- TUTORIAL / TOUR STYLES (UPDATED) --- */
+        /* --- TUTORIAL / TOUR STYLES (ENHANCED) --- */
         
-        /* Overlay Gelap: pointer-events NONE agar bisa scroll */
+        /* Overlay Gelap untuk fokus */
         #tourOverlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.75);
             z-index: 999;
             opacity: 0; transition: opacity 0.5s ease;
-            pointer-events: none !important; /* Allow scroll through overlay */
+            pointer-events: none;
+            touch-action: none; /* Mencegah scroll browser default di area overlay */
         }
-        #tourOverlay.active { opacity: 1; }
+        #tourOverlay.active { opacity: 1; pointer-events: auto; }
 
-        /* Saat Mode Tutorial: Matikan interaksi elemen lain */
-        body.tutorial-mode main {
-            pointer-events: none; /* Disable click on background items */
-        }
-
-        /* Nyalakan interaksi HANYA untuk elemen yang disorot */
-        body.tutorial-mode .tour-highlight {
-            pointer-events: auto !important;
+        /* Element yang sedang disorot */
+        .tour-highlight {
             position: relative;
             z-index: 1000 !important;
-            box-shadow: 0 0 0 4px #34d399, 0 0 40px rgba(0,0,0,0.5);
-            background-color: #064e3b !important;
+            box-shadow: 0 0 0 4px #34d399, 0 0 100px 100px rgba(0,0,0,0.5); /* Extended shadow untuk deep focus */
+            background-color: #064e3b !important; /* Force solid bg agar teks terbaca jelas */
             border-radius: 12px;
-            transition: all 0.3s ease;
+            transition: box-shadow 0.3s ease, transform 0.3s ease; /* Smooth transition */
         }
 
         /* Tooltip Box Tutorial */
@@ -108,15 +103,17 @@
             border-radius: 16px;
             padding: 16px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1), left 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.3s ease;
             opacity: 0;
             transform: translateY(10px) scale(0.95);
-            pointer-events: auto !important; /* Tooltip must be clickable */
+            pointer-events: none;
+            will-change: top, left; /* Performance optimization */
         }
 
         #tourTooltip.visible {
             opacity: 1;
             transform: translateY(0) scale(1);
+            pointer-events: auto;
         }
 
         /* Arrow/Tail for tooltip */
@@ -126,7 +123,13 @@
             height: 14px;
             background: white;
             transform: rotate(45deg);
-            transition: left 0.3s ease; /* Smooth move arrow */
+            transition: left 0.5s ease, top 0.5s ease, bottom 0.5s ease;
+        }
+
+        /* Utility Class untuk Lock Scroll pada Body */
+        body.tour-active {
+            overflow: hidden !important; /* Benar-benar mematikan scrollbar */
+            height: 100vh;
         }
         
     </style>
@@ -291,8 +294,8 @@
 
     <script>
         // --- TUTORIAL VERSION CONFIGURATION ---
-        // Ganti angka ini (misal "1.1") jika ada update baru dan ingin tutorial muncul lagi untuk semua orang.
-        const TUTORIAL_VERSION = "1.0";
+        // Ganti angka ini (misal "1.2") jika ada update baru dan ingin tutorial muncul lagi untuk semua orang.
+        const TUTORIAL_VERSION = "1.2";
 
         // --- DATA & VARIABLES ---
         const names = [
@@ -522,7 +525,7 @@
         }
 
         // ==========================================
-        //         TUTORIAL SYSTEM ENGINE
+        //         TUTORIAL SYSTEM ENGINE (IMPROVED)
         // ==========================================
         
         const tourSteps = [
@@ -534,12 +537,49 @@
         ];
         
         let currentStepIdx = 0;
+        let isTransitioning = false;
+
+        // --- Scroll Locking Mechanism (The "Paten" Logic) ---
+        function preventDefault(e) { e.preventDefault(); }
+        function preventDefaultForScrollKeys(e) {
+            // Keys: left: 37, up: 38, right: 39, down: 40, spacebar: 32, pageup: 33, pagedown: 34, end: 35, home: 36
+            const keys = {37: 1, 38: 1, 39: 1, 40: 1, 32: 1, 33: 1, 34: 1, 35: 1, 36: 1};
+            if (keys[e.keyCode]) { preventDefault(e); return false; }
+        }
+
+        // Fungsi untuk mengunci scroll manual user (Touch/MouseWheel/Keyboard)
+        function lockScroll() {
+            // Modern Chrome requires { passive: false } to preventDefault on touchmove/wheel
+            const supportsPassive = false;
+            try {
+                window.addEventListener("test", null, Object.defineProperty({}, 'passive', {
+                    get: function () { supportsPassive = true; } 
+                }));
+            } catch(e) {}
+            const wheelOpt = supportsPassive ? { passive: false } : false;
+            
+            window.addEventListener('DOMMouseScroll', preventDefault, false); // older FF
+            window.addEventListener('wheel', preventDefault, wheelOpt); // modern desktop
+            window.addEventListener('touchmove', preventDefault, wheelOpt); // mobile
+            window.addEventListener('keydown', preventDefaultForScrollKeys, false);
+            
+            // Tambahkan class ke body untuk jaga-jaga (hide scrollbar visual)
+            document.body.classList.add('tour-active');
+        }
+
+        function unlockScroll() {
+            window.removeEventListener('DOMMouseScroll', preventDefault, false);
+            window.removeEventListener('wheel', preventDefault);
+            window.removeEventListener('touchmove', preventDefault);
+            window.removeEventListener('keydown', preventDefaultForScrollKeys, false);
+            
+            document.body.classList.remove('tour-active');
+        }
 
         function checkTutorial() {
             const storedVer = localStorage.getItem('presensi_pai_tutorial_ver');
-            // Jika versi di local storage berbeda dengan versi kode sekarang, jalankan tutorial
             if (storedVer !== TUTORIAL_VERSION) {
-                setTimeout(startTutorial, 1500); // Delay sedikit agar smooth saat load
+                setTimeout(startTutorial, 1500); 
             }
         }
 
@@ -549,30 +589,35 @@
 
         function startTutorial() {
             currentStepIdx = 0;
-            document.body.classList.add('tutorial-mode'); // Enable tutorial constraints
+            // Lock User Interaction
+            lockScroll();
             document.getElementById('tourOverlay').classList.add('active');
             showStep();
         }
 
         function endTutorial() {
-            document.body.classList.remove('tutorial-mode'); // Disable constraints
             document.getElementById('tourOverlay').classList.remove('active');
             document.getElementById('tourTooltip').classList.remove('visible');
             
-            // Hapus highlight class
             const prevHigh = document.querySelector('.tour-highlight');
             if (prevHigh) prevHigh.classList.remove('tour-highlight');
             
-            // Simpan versi agar tidak muncul lagi
+            // Unlock User Interaction
+            unlockScroll();
             localStorage.setItem('presensi_pai_tutorial_ver', TUTORIAL_VERSION);
         }
 
         function nextStep() {
+            if (isTransitioning) return; // Mencegah double click glitch
+            isTransitioning = true;
+            
             currentStepIdx++;
             if (currentStepIdx >= tourSteps.length) {
                 endTutorial();
+                isTransitioning = false;
             } else {
                 showStep();
+                setTimeout(() => { isTransitioning = false; }, 600); // Cooldown untuk animasi scroll
             }
         }
 
@@ -585,9 +630,19 @@
             // 1. Pindahkan Highlight
             const prevHigh = document.querySelector('.tour-highlight');
             if (prevHigh) prevHigh.classList.remove('tour-highlight');
+            
             if (targetEl) {
                 targetEl.classList.add('tour-highlight');
-                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // --- SCROLLING MAGIC (PATEN TAPI SMOOTH) ---
+                // Kita gunakan setTimeout 0 agar browser render class highlight dulu
+                setTimeout(() => {
+                    targetEl.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center',
+                        inline: 'center' 
+                    });
+                }, 50);
             }
 
             // 2. Update Konten Tooltip
@@ -597,67 +652,64 @@
             document.getElementById('tourNextBtn').innerText = (currentStepIdx === tourSteps.length - 1) ? 'Selesai' : 'Lanjut';
 
             // 3. Kalkulasi Posisi Pintar (Smart Positioning)
-            if (targetEl) {
-                const rect = targetEl.getBoundingClientRect();
-                const tooltipW = 280; // Lebar tooltip (fixed di CSS)
-                const tooltipH = 180; // Estimasi tinggi
-                const arrowSize = 8;  // Setengah ukuran diagonal arrow
+            // Timeout sedikit agar scroll selesai sebagian, mencegah glitch posisi tooltip
+            setTimeout(() => {
+                if (targetEl) {
+                    const rect = targetEl.getBoundingClientRect();
+                    const tooltipW = 280; 
+                    const tooltipH = 180; 
+                    const arrowSize = 8; 
 
-                // Cek ruang di bawah
-                const spaceBelow = window.innerHeight - rect.bottom;
-                
-                let topPos, leftPos, isTop;
+                    // Cek ruang di bawah
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    
+                    let topPos, leftPos, isTop;
 
-                // Jika ruang bawah cukup, taruh di bawah. Jika tidak, taruh di atas.
-                if (spaceBelow > tooltipH) {
-                    topPos = rect.bottom + 15;
-                    isTop = false;
-                } else {
-                    topPos = rect.top - tooltipH - 15;
-                    isTop = true;
+                    if (spaceBelow > tooltipH) {
+                        topPos = rect.bottom + 20; // Tambah gap sedikit
+                        isTop = false;
+                    } else {
+                        topPos = rect.top - tooltipH - 20;
+                        isTop = true;
+                    }
+
+                    // Center Horizontal
+                    const targetCenter = rect.left + (rect.width / 2);
+                    leftPos = targetCenter - (tooltipW / 2);
+
+                    // Clamp Screen Edge
+                    if (leftPos < 15) leftPos = 15;
+                    if (leftPos + tooltipW > window.innerWidth) leftPos = window.innerWidth - tooltipW - 15;
+
+                    // Apply Position
+                    tooltip.style.top = `${topPos}px`;
+                    tooltip.style.left = `${leftPos}px`;
+
+                    // Arrow Position
+                    let arrowLeft = targetCenter - leftPos - arrowSize;
+                    if (arrowLeft < 15) arrowLeft = 15;
+                    if (arrowLeft > tooltipW - 30) arrowLeft = tooltipW - 30;
+
+                    arrow.style.left = `${arrowLeft}px`;
+                    
+                    if (isTop) {
+                        arrow.style.bottom = "-7px";
+                        arrow.style.top = "auto";
+                    } else {
+                        arrow.style.top = "-7px";
+                        arrow.style.bottom = "auto";
+                    }
+
+                    tooltip.classList.add('visible');
                 }
-
-                // Kalkulasi Horizontal (Center terhadap target)
-                const targetCenter = rect.left + (rect.width / 2);
-                leftPos = targetCenter - (tooltipW / 2);
-
-                // Clamp agar tidak keluar layar kiri/kanan
-                if (leftPos < 10) leftPos = 10;
-                if (leftPos + tooltipW > window.innerWidth) leftPos = window.innerWidth - tooltipW - 10;
-
-                // Terapkan Posisi Tooltip
-                tooltip.style.top = `${topPos}px`;
-                tooltip.style.left = `${leftPos}px`;
-
-                // 4. Kalkulasi Posisi Anak Panah (Dynamic Arrow)
-                // Panah harus menunjuk ke targetCenter relative terhadap tooltip
-                let arrowLeft = targetCenter - leftPos - arrowSize;
-                
-                // Batasi arrow agar tidak keluar dari box tooltip (border radius)
-                if (arrowLeft < 15) arrowLeft = 15;
-                if (arrowLeft > tooltipW - 30) arrowLeft = tooltipW - 30;
-
-                arrow.style.left = `${arrowLeft}px`;
-                
-                // Atur arah panah (atas/bawah)
-                if (isTop) {
-                    arrow.style.bottom = "-7px";
-                    arrow.style.top = "auto";
-                } else {
-                    arrow.style.top = "-7px";
-                    arrow.style.bottom = "auto";
-                }
-
-                // Tampilkan
-                tooltip.classList.add('visible');
-            }
+            }, 300); // Delay menyesuaikan durasi awal scroll smooth
         }
 
         // --- INIT ---
         initList(); 
         refreshAllList(); 
         renderActivityPreview(); 
-        checkTutorial(); // Cek apakah perlu menampilkan tutorial
+        checkTutorial();
 
     </script>
 </body>
