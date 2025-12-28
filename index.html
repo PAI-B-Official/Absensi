@@ -174,7 +174,7 @@
                     Nama-nama Mahasiswa
                 </h2>
                 <button onclick="resetAllData()" class="text-[10px] bg-red-500/20 hover:bg-red-500/40 text-red-100 border border-red-500/30 px-3 py-1 rounded transition active:scale-95">
-                    Refresh / Reset
+                    Refresh
                 </button>
             </div>
             
@@ -524,11 +524,11 @@
         // ==========================================
         
         const tourSteps = [
-            { id: 'tour-header', title: 'Selamat Datang!', desc: 'Ini adalah aplikasi presensi kelas PAI 1B. Tanggal akan otomatis terisi.' },
-            { id: 'tour-names', title: 'Pilih Nama', desc: 'Klik nama mahasiswa untuk memilihnya. Secara default, status mereka adalah Hadir (Hijau).' },
-            { id: 'tour-status', title: 'Ubah Status', desc: 'Jika ada yang tidak hadir, pilih namanya lalu klik tombol status (Izin/Sakit/Alpha) di sini.' },
-            { id: 'tour-activity', title: 'Catat Aktivitas', desc: 'Catat keaktifan mahasiswa (bertanya/menjawab) dengan memilih nama, jenis, dan mengisi catatan.' },
-            { id: 'tour-send', title: 'Kirim Laporan', desc: 'Terakhir, tekan tombol "Kirim ke WhatsApp" untuk membuat laporan presensi otomatis yang rapi.' }
+            { id: 'tour-header', title: 'Selamat Datang!', desc: 'Selamat datang di presensi kelas PAI 1B. Tanggal akan otomatis terisi di Chat.' },
+            { id: 'tour-names', title: 'Pilih Nama', desc: 'Klik untuk memilih nama mahasiswa yang bersangkutan guna mengisi kolom "Detail Keterangan" atau "Mengajukan Keterangan".' },
+            { id: 'tour-status', title: 'Ubah Status', desc: 'Jika ada nama mahasiswa yang tidak hadir, pilih namanya lalu klik tombol status (Izin/Sakit/Alpha).' },
+            { id: 'tour-activity', title: 'Catat Aktivitas', desc: 'Catat konteks keaktifan mahasiswa dengan memilih nama, aktivitas yang dilakukan, dan mengisi detail aktivitas.' },
+            { id: 'tour-send', title: 'Kirim Laporan', desc: 'Terakhir, tekan tombol "Kirim ke WhatsApp" untuk membuat laporan presensi otomatis rapih tinggal kirim ke grup.' }
         ];
         
         let currentStepIdx = 0;
@@ -685,3 +685,4 @@
     </script>
 </body>
 </html>
+
