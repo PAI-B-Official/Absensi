@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Data Personel PAI 1B</title>
+    <title>Data Personel PAI 2B</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -493,10 +493,10 @@
             }
             const presentList = names.filter(name => attendanceData[name] === 'Hadir');
             const absentList = names.filter(name => attendanceData[name] !== 'Hadir');
-            let message = `*Daftar Kehadiran Mahasiswa PAI 1B*\n*Tanggal : ${dateString}*\n`; 
+            let message = `*Daftar Kehadiran Mahasiswa PAI 2B*\n*Tanggal : ${dateString}*\n`; 
             if (presentList.length > 0) { presentList.forEach((name, index) => { message += `${index + 1}. ${name.toUpperCase()}\n`; }); } 
             else { message += `(Tidak ada yang hadir)\n`; }
-            message += `\n*Daftar Tidak Hadir Mahasiswa PAI 1B*\n`;
+            message += `\n*Daftar Tidak Hadir Mahasiswa PAI 2B*\n`;
             if (absentList.length === 0) { message += `• NIHIL\n`; } 
             else { absentList.forEach(name => { let status = attendanceData[name]; if (status === 'Alpha') status = 'Tanpa Keterangan'; message += `• ${name} (${status})\n`; }); }
             message += `\n*Daftar Nama Mahasiswa Aktif Kegiatan Perkuliahan (Bertanya, Menjawab, & Menyanggah)*\n`;
@@ -524,7 +524,7 @@
         // ==========================================
         
         const tourSteps = [
-            { id: 'tour-header', title: 'Selamat Datang!', desc: 'Selamat datang di presensi kelas PAI 1B. Tanggal akan otomatis terisi di Chat.' },
+            { id: 'tour-header', title: 'Selamat Datang!', desc: 'Selamat datang di presensi kelas PAI B. Tanggal akan otomatis terisi di Chat.' },
             { id: 'tour-names', title: 'Pilih Nama', desc: 'Klik untuk memilih nama mahasiswa yang bersangkutan guna mengisi kolom "Detail Keterangan" atau "Mengajukan Keterangan".' },
             { id: 'tour-status', title: 'Ubah Status', desc: 'Jika ada nama mahasiswa yang tidak hadir, pilih namanya lalu klik tombol status (Izin/Sakit/Alpha).' },
             { id: 'tour-activity', title: 'Catat Aktivitas', desc: 'Catat konteks keaktifan mahasiswa dengan memilih nama, aktivitas yang dilakukan, dan mengisi detail aktivitas.' },
@@ -685,6 +685,7 @@
     </script>
 </body>
 </html>
+
 
 
 
