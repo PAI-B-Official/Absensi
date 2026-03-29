@@ -715,8 +715,7 @@
             const presentList = STUDENTS_DATA.filter(s => attendance[s.name] === 'Hadir');
             const absentList = STUDENTS_DATA.filter(s => attendance[s.name] !== 'Hadir');
             
-            let message = `*Daftar Kehadiran Mahasiswa PAI B*\n*Tanggal : ${dateString}*\n\n`; 
-            
+            let message = `*Daftar Kehadiran Mahasiswa PAI B*\n*Tanggal : ${dateString}*\n\n`;
             if (presentList.length > 0) { 
                 presentList.forEach((s, index) => { message += `${index + 1}. ${s.name.toUpperCase()} (${s.nim})\n`; }); 
             } else { 
