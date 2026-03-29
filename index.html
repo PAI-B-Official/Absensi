@@ -84,11 +84,12 @@
                     </div>
                     <div>
                         <h1 class="text-lg font-bold tracking-wide leading-tight">PRESENSI ABSENSI PAI B</h1>
-                        <input 
-                            type="date" 
-                            id="input-tanggal"
-                            class="mt-1 bg-emerald-800/40 hover:bg-emerald-800/60 dark:bg-emerald-900/40 text-emerald-50 text-[11px] px-2 py-1 rounded border border-emerald-600/50 focus:outline-none focus:ring-1 focus:ring-emerald-400 transition-colors [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert opacity-90 cursor-pointer"
-                        />
+                        <div class="mt-1 flex items-center gap-1.5 text-emerald-100 text-[11px] sm:text-xs">
+                            <span id="live-date" class="font-medium">Memuat tanggal...</span>
+                            <span class="opacity-50 text-[10px]">•</span>
+                            <span id="live-time" class="font-mono bg-emerald-800/60 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded tracking-wider shadow-sm">00:00:00 WIB</span>
+                            <input type="hidden" id="input-tanggal" />
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -108,7 +109,10 @@
             <section id="tour-names" class="flex flex-col gap-2 transition-all duration-300 rounded-xl p-1 -m-1">
                 <div class="flex items-center justify-between mb-1">
                     <h2 class="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">Daftar Mahasiswa</h2>
-                    <button onclick="resetData()" class="text-xs bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/50 px-3 py-1.5 rounded-md transition active:scale-95 font-medium">Reset Data</button>
+                    <button onclick="openFAQ()" class="flex items-center gap-1 text-xs bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-md transition active:scale-95 font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                        FAQ
+                    </button>
                 </div>
                 <div id="student-list" class="space-y-2 overflow-y-auto pr-2 max-h-[320px] custom-scrollbar">
                     <!-- Javascript will render students here -->
@@ -210,6 +214,44 @@
         </div>
     </div>
 
+    <!-- MODAL FAQ -->
+    <div id="modal-faq" class="fixed inset-0 bg-gray-900/60 dark:bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl transform transition-all border border-gray-100 dark:border-slate-700 scale-95 flex flex-col max-h-[80vh]" id="modal-faq-content">
+            <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" class="dark:stroke-blue-400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">FAQ & Bantuan</h3>
+                </div>
+                <button onclick="closeFAQ()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="overflow-y-auto custom-scrollbar pr-2 space-y-4 text-left">
+                <div>
+                    <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200">Apa fungsi aplikasi ini?</h4>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Aplikasi ini digunakan untuk mencatat kehadiran dan keaktifan mahasiswa kelas PAI B secara digital.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200">Bagaimana cara mengubah status kehadiran?</h4>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Klik pada nama mahasiswa hingga muncul ikon centang, lalu klik tombol status (Alpha, Izin, Sakit) pada panel di bawahnya.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200">Bagaimana cara membatalkan status?</h4>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Anda bisa mengeklik ikon tempat sampah (hapus) yang muncul di sebelah kanan status mahasiswa untuk mengembalikannya menjadi "Hadir".</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200">Apa bedanya "Simpan Data" dan "Kirim ke WhatsApp"?</h4>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1"><span class="font-semibold text-gray-700 dark:text-gray-300">Simpan Data:</span> Mengirim dan merekap data presensi ke Google Spreadsheet.<br><span class="font-semibold text-gray-700 dark:text-gray-300">Kirim ke WA:</span> Membuat teks laporan otomatis yang siap dikirim melalui aplikasi WhatsApp.</p>
+                </div>
+            </div>
+            <div class="mt-5 pt-3 border-t border-gray-100 dark:border-slate-700">
+                <button onclick="closeFAQ()" class="w-full px-4 py-2.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold transition">Tutup Bantuan</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TUTORIAL TOOLTIP -->
     <div id="tour-tooltip" class="fixed z-[1001] w-[280px] bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 p-5 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 transition-all duration-300 opacity-0 scale-95 pointer-events-none hidden">
         <div id="tour-arrow" class="absolute w-4 h-4 bg-white dark:bg-slate-800 transform rotate-45 border-t border-l border-gray-100 dark:border-slate-700"></div>
@@ -285,7 +327,8 @@
         //         INITIALIZATION
         // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
-            initDate();
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
             initTheme();
             document.getElementById('current-year').textContent = new Date().getFullYear();
             renderStudents();
@@ -298,13 +341,24 @@
             }
         });
 
-        function initDate() {
-            const dateInput = document.getElementById('input-tanggal');
-            const d = new Date();
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            dateInput.value = `${year}-${month}-${day}`;
+        function updateDateTime() {
+            const now = new Date();
+            
+            // Set Format Waktu Indonesia Barat (WIB)
+            const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' };
+            const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta', hour12: false };
+            
+            const dateStr = now.toLocaleDateString('id-ID', optionsDate);
+            const timeStr = now.toLocaleTimeString('id-ID', optionsTime).replace(/\./g, ':');
+            
+            document.getElementById('live-date').textContent = dateStr;
+            document.getElementById('live-time').textContent = timeStr + ' WIB';
+            
+            // Update hidden input agar database / format WhatsApp tetap menerima nilai YYYY-MM-DD yang valid
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('input-tanggal').value = `${year}-${month}-${day}`;
         }
 
         function getDateString() {
@@ -539,8 +593,25 @@
             if (tourActive) setTimeout(positionTooltip, 50);
         }
 
-        function resetData() {
-            if (!confirm("Reset semua data kehadiran dan aktivitas?")) return;
+        function openFAQ() {
+            const modal = document.getElementById('modal-faq');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('modal-faq-content').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeFAQ() {
+            const modal = document.getElementById('modal-faq');
+            modal.classList.add('opacity-0');
+            document.getElementById('modal-faq-content').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function silentResetData() {
             STUDENTS_DATA.forEach(student => attendance[student.name] = 'Hadir');
             selectedNames.clear();
             activityLogs = [];
@@ -551,7 +622,6 @@
             document.getElementById('activity-note').value = '';
             renderStudents();
             renderActivityLogs();
-            showToastMsg("Semua data berhasil di-reset");
         }
 
         // ==========================================
@@ -674,7 +744,7 @@
             window.open(url, '_blank');
             
             closeModal();
-            resetData();
+            silentResetData();
             if (tourActive) endTutorial();
         }
 
